@@ -351,7 +351,7 @@ const Pagos = () => {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerContainerStyle}>
-        <h1 style={headerTitleStyle}>💰 Gestión de Pagos</h1>
+        <h1 style={headerTitleStyle}> Gestión de Pagos</h1>
         <p style={headerSubtitleStyle}>Administra pagos y cuotas de manera eficiente</p>
       </div>
 
@@ -359,27 +359,27 @@ const Pagos = () => {
       <div style={cardsGridStyle}>
         <div style={statCardStyle}>
           <div style={statLabelStyle}>
-            📅 Total del Mes
+             Total del Mes
           </div>
-          <p style={{ ...statValueBaseStyle, color: '#10b981' }}>
+          <p style={{ ...statValueBaseStyle, color: '#111827' }}>
             ${totalMes.toLocaleString('es-AR')}
           </p>
         </div>
 
         <div style={statCardStyle}>
           <div style={statLabelStyle}>
-            📊 Total del Año
+             Total del Año
           </div>
-          <p style={{ ...statValueBaseStyle, color: '#2563eb' }}>
+          <p style={{ ...statValueBaseStyle, color: '#111827' }}>
             ${totalAnual.toLocaleString('es-AR')}
           </p>
         </div>
 
         <div style={statCardStyle}>
           <div style={statLabelStyle}>
-            💎 Total General
+             Total General
           </div>
-          <p style={{ ...statValueBaseStyle, color: '#8b5cf6' }}>
+          <p style={{ ...statValueBaseStyle, color: '#111827' }}>
             ${totalGeneral.toLocaleString('es-AR')}
           </p>
         </div>
@@ -388,7 +388,7 @@ const Pagos = () => {
       {/* Formulario de registro */}
       <div style={registroCardStyle}>
         <h2 style={registroTitleStyle}>
-          ✨ Registrar Nuevo Pago
+           Registrar Nuevo Pago
         </h2>
 
         <div style={formGridStyle}>
@@ -397,7 +397,7 @@ const Pagos = () => {
             value={opcionesUsuarios.find(op => op.value === parseInt(usuarioPago)) || null}
             onChange={(selectedOption) => setUsuarioPago(selectedOption ? String(selectedOption.value) : "")}
             onMenuScrollToBottom={handleMenuScrollToBottom}
-            placeholder="👤 Buscar y seleccionar alumno..."
+            placeholder=" Buscar y seleccionar alumno..."
             isClearable
             isSearchable
             isLoading={isLoadingUsers}
@@ -438,7 +438,7 @@ const Pagos = () => {
             onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
             onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
           >
-            <option value="">🎓 Seleccionar curso</option>
+            <option value=""> Seleccionar curso</option>
             {cursos.map(c => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -448,7 +448,7 @@ const Pagos = () => {
 
           <input
             type="number"
-            placeholder="💵 Monto"
+            placeholder=" Monto"
             value={monto}
             onChange={e => setMonto(e.target.value)}
             style={inputStyle}
@@ -472,7 +472,7 @@ const Pagos = () => {
           onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
           onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
         >
-          💾 Registrar Pago
+           Registrar Pago
         </button>
       </div>
 
@@ -480,18 +480,18 @@ const Pagos = () => {
       <div style={tableContainerStyle}>
         {pagosFiltrados.length === 0 ? (
           <div style={emptyStateStyle}>
-            📭 No hay pagos registrados todavía
+             No hay pagos registrados todavía
           </div>
         ) : (
           <table style={tableStyle}>
             <thead style={theadStyle}>
               <tr>
-                <th style={thStyle}>👤 Alumno</th>
-                <th style={thStyle}>🎓 Curso</th>
-                <th style={thStyle}>💵 Monto</th>
-                <th style={thStyle}>📅 Mes</th>
-                <th style={thStyle}>📆 Fecha</th>
-                <th style={thStyle}>⚙️ Acciones</th>
+                <th style={thStyle}> Alumno</th>
+                <th style={thStyle}> Curso</th>
+                <th style={thStyle}> Monto</th>
+                <th style={thStyle}> Mes</th>
+                <th style={thStyle}> Fecha</th>
+                <th style={thStyle}> Acciones</th>
               </tr>
             </thead>
             <tbody>

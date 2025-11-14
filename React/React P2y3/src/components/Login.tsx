@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 type LoginProcessResponse = {
   status: string;
@@ -19,6 +20,7 @@ function Login() {
 
   const [message, setMessage] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -26,7 +28,7 @@ function Login() {
     if (dataObject.status === "success") {
       localStorage.setItem("token", dataObject.token ?? "");
       localStorage.setItem("user", JSON.stringify(dataObject.user));
-      setMessage("Initiating session...");
+      setMessage("Iniciando sesión...");
 
       // Redirigir según el tipo de usuario
       const user = dataObject.user as { type?: string };
@@ -38,7 +40,16 @@ function Login() {
         navigate("/dashboard");
       }
     } else {
-      setMessage(dataObject.message ?? "Unknown error");
+      // Mejorar mensajes del backend
+      const backendMessage = dataObject.message?.toLowerCase() || "";
+
+      if (backendMessage.includes("invalid") || backendMessage.includes("password") || backendMessage.includes("username")) {
+        setMessage("Usuario o contraseña incorrectos");
+      } else if (backendMessage.includes("not found")) {
+        setMessage("Usuario no encontrado");
+      } else {
+        setMessage("Error al iniciar sesión. Intenta nuevamente");
+      }
     }
   }
 
@@ -47,6 +58,12 @@ function Login() {
 
     const username = userInputRef.current?.value ?? "";
     const password = passInputRef.current?.value ?? "";
+
+    // Validación frontend
+    if (!username.trim() || !password.trim()) {
+      setMessage("Por favor, completa todos los campos");
+      return;
+    }
 
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
@@ -64,7 +81,7 @@ function Login() {
       .then((dataObject) => loginProcess(dataObject))
       .catch((error) => {
         console.error("Error durante el inicio de sesión:", error);
-        setMessage("Ocurrió un error al intentar iniciar sesión. Inténtalo de nuevo.");
+        setMessage("No se pudo conectar con el servidor. Verifica tu conexión.");
       });
   }
 
@@ -106,7 +123,8 @@ function Login() {
         alignItems: "center",
         justifyContent: "center",
         background: "#f5f5f5",
-        padding: "20px"
+        padding: "20px",
+        position: "relative"
       }}
     >
       <div
@@ -157,15 +175,15 @@ function Login() {
             />
           </div>
 
-          <div style={{ marginBottom: "40px" }}>
+          <div style={{ marginBottom: "40px", position: "relative" }}>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               ref={passInputRef}
               placeholder="Contraseña"
               onChange={(e) => setNewPassword(e.target.value)}
               style={{
                 width: "100%",
-                padding: "12px 0",
+                padding: "12px 35px 12px 0",
                 background: "transparent",
                 border: "none",
                 borderBottom: "1px solid #ddd",
@@ -174,6 +192,27 @@ function Login() {
                 outline: "none"
               }}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: "0",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                padding: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#666"
+              }}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
 
           <button
@@ -193,7 +232,7 @@ function Login() {
               letterSpacing: "1px"
             }}
           >
-            INICIAR SESION
+            INICIAR SESIÓN
           </button>
 
           {message && (
@@ -202,6 +241,21 @@ function Login() {
             </div>
           )}
         </form>
+      </div>
+
+      {/* Footer con nombre del instituto */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: "20px",
+          left: "20px",
+          fontSize: "14px",
+          color: "#4f4a4aff",
+          fontWeight: "400",
+          letterSpacing: "0.5px"
+        }}
+      >
+        © 2025 Instituto Mariano Moreno
       </div>
     </div>
   );

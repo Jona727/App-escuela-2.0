@@ -86,6 +86,12 @@ export default function MiCursada() {
   };
 
   // Estilos minimalistas
+  const backgroundContainerStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    background: '#f5f7fa',
+    width: '100%',
+  };
+
   const containerStyle: React.CSSProperties = {
     maxWidth: '900px',
     margin: '0 auto',
@@ -95,10 +101,11 @@ export default function MiCursada() {
   };
 
   const cursoCardStyle: React.CSSProperties = {
-    background: '#f7f4f4ff',
+    background: 'white',
     borderRadius: '12px',
     padding: '32px',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    border: '1px solid #e5e7eb',
     marginBottom: '64px',
   };
 
@@ -165,7 +172,7 @@ export default function MiCursada() {
 
   const refreshButtonStyle: React.CSSProperties = {
     background: 'transparent',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #4b5563',
     borderRadius: '6px',
     padding: '6px 12px',
     cursor: isRefreshing ? 'not-allowed' : 'pointer',
@@ -178,6 +185,14 @@ export default function MiCursada() {
     transition: 'all 0.15s',
     fontFamily: 'inherit',
     opacity: isRefreshing ? 0.5 : 1,
+  };
+
+  const materiasContainerStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '12px',
+    padding: '32px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    border: '1px solid #e5e7eb',
   };
 
   const materiasListStyle: React.CSSProperties = {
@@ -276,39 +291,45 @@ export default function MiCursada() {
 
   if (loading) {
     return (
-      <div style={loadingStyle}>
-        <RefreshCw size={20} className="animate-spin" style={{ marginRight: '8px' }} />
-        <span>Cargando...</span>
+      <div style={backgroundContainerStyle}>
+        <div style={loadingStyle}>
+          <RefreshCw size={20} className="animate-spin" style={{ marginRight: '8px' }} />
+          <span>Cargando...</span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={errorStyle}>
-        <h2 style={errorTitleStyle}>Error</h2>
-        <p style={errorMessageStyle}>{error}</p>
-        <button
-          onClick={fetchMiCursada}
-          style={errorButtonStyle}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#000000'}
-          onMouseLeave={(e) => e.currentTarget.style.background = '#111827'}
-        >
-          <RefreshCw size={14} />
-          Reintentar
-        </button>
+      <div style={backgroundContainerStyle}>
+        <div style={errorStyle}>
+          <h2 style={errorTitleStyle}>Error</h2>
+          <p style={errorMessageStyle}>{error}</p>
+          <button
+            onClick={fetchMiCursada}
+            style={errorButtonStyle}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#000000'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#111827'}
+          >
+            <RefreshCw size={14} />
+            Reintentar
+          </button>
+        </div>
       </div>
     );
   }
 
   if (!cursadaData) {
     return (
-      <div style={containerStyle}>
-        <div style={emptyStyle}>
-          <h3 style={emptyTitleStyle}>Sin información de cursada</h3>
-          <p style={emptyMessageStyle}>
-            No se encontró información de cursada para tu usuario.
-          </p>
+      <div style={backgroundContainerStyle}>
+        <div style={containerStyle}>
+          <div style={emptyStyle}>
+            <h3 style={emptyTitleStyle}>Sin información de cursada</h3>
+            <p style={emptyMessageStyle}>
+              No se encontró información de cursada para tu usuario.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -319,103 +340,105 @@ export default function MiCursada() {
   const aprobadas = materias?.filter(m => m.estado?.toLowerCase() === 'aprobado').length || 0;
 
   return (
-    <div style={containerStyle}>
-      {/* Header del curso */}
-      <div style={cursoCardStyle}>
-        <h2 style={mainTitleStyle}>MI CURSO</h2>
-        <h1 style={cursoNombreStyle}>{curso.nombre}</h1>
+    <div style={backgroundContainerStyle}>
+      <div style={containerStyle}>
+        {/* Header del curso */}
+        <div style={cursoCardStyle}>
+          <h2 style={mainTitleStyle}>MI CURSO</h2>
+          <h1 style={cursoNombreStyle}>{curso.nombre}</h1>
 
-        <div style={statsLineStyle}>
-          <div style={statStyle}>
-            <span style={statLabelStyle}>Materias Totales</span>
-            <span style={statNumberStyle}>{totalMaterias}</span>
-          </div>
+          <div style={statsLineStyle}>
+            <div style={statStyle}>
+              <span style={statLabelStyle}>Materias Totales</span>
+              <span style={statNumberStyle}>{totalMaterias}</span>
+            </div>
 
-          <div style={statDividerStyle}></div>
+            <div style={statDividerStyle}></div>
 
-          <div style={statStyle}>
-            <span style={statLabelStyle}>Materias Aprobadas</span>
-            <span style={statNumberStyle}>{aprobadas}</span>
-          </div>
+            <div style={statStyle}>
+              <span style={statLabelStyle}>Materias Aprobadas</span>
+              <span style={statNumberStyle}>{aprobadas}</span>
+            </div>
 
-          <div style={statDividerStyle}></div>
+            <div style={statDividerStyle}></div>
 
-          <div style={statStyle}>
-            <span style={statLabelStyle}>Año Escolar</span>
-            <span style={statNumberStyle}>{curso.anio_escolar}</span>
+            <div style={statStyle}>
+              <span style={statLabelStyle}>Año Escolar</span>
+              <span style={statNumberStyle}>{curso.anio_escolar}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Lista de materias */}
-      <div>
-        <div style={sectionTitleStyle}>
-          <span>Mis Materias</span>
-          <button
-            onClick={fetchMiCursada}
-            disabled={isRefreshing}
-            style={refreshButtonStyle}
-            onMouseEnter={(e) => {
-              if (!isRefreshing) {
-                e.currentTarget.style.background = '#f9fafb';
-                e.currentTarget.style.borderColor = '#d1d5db';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isRefreshing) {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = '#e5e7eb';
-              }
-            }}
-          >
-            <RefreshCw size={14} style={{
-              animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
-            }} />
-            Actualizar
-          </button>
-        </div>
-
-        {materias && materias.length > 0 ? (
-          <ul style={materiasListStyle}>
-            {materias.map((materia) => (
-              <li
-                key={materia.id}
-                style={materiaItemStyle}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#fafafa';
-                }}
-                onMouseLeave={(e) => {
+        {/* Lista de materias */}
+        <div style={materiasContainerStyle}>
+          <div style={sectionTitleStyle}>
+            <span>Mis Materias</span>
+            <button
+              onClick={fetchMiCursada}
+              disabled={isRefreshing}
+              style={refreshButtonStyle}
+              onMouseEnter={(e) => {
+                if (!isRefreshing) {
+                  e.currentTarget.style.background = '#f9fafb';
+                  e.currentTarget.style.borderColor = '#d1d5db';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isRefreshing) {
                   e.currentTarget.style.background = 'transparent';
-                }}
-              >
-                <span style={materiaNombreStyle}>{materia.nombre}</span>
-                <div style={estadoBadgeStyle}>
-                  {getEstadoIcon(materia.estado)}
-                  <span>{materia.estado}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div style={emptyStyle}>
-            <p style={emptyTitleStyle}>No hay materias asignadas</p>
-            <p style={emptyMessageStyle}>
-              Contacta con administración para que asignen materias a tu curso.
-            </p>
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                }
+              }}
+            >
+              <RefreshCw size={14} style={{
+                animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
+              }} />
+              Actualizar
+            </button>
           </div>
-        )}
-      </div>
 
-      {/* CSS para animación */}
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-      `}</style>
+          {materias && materias.length > 0 ? (
+            <ul style={materiasListStyle}>
+              {materias.map((materia) => (
+                <li
+                  key={materia.id}
+                  style={materiaItemStyle}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#fafafa';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <span style={materiaNombreStyle}>{materia.nombre}</span>
+                  <div style={estadoBadgeStyle}>
+                    {getEstadoIcon(materia.estado)}
+                    <span>{materia.estado}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div style={emptyStyle}>
+              <p style={emptyTitleStyle}>No hay materias asignadas</p>
+              <p style={emptyMessageStyle}>
+                Contacta con administración para que asignen materias a tu curso.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* CSS para animación */}
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          .animate-spin {
+            animation: spin 1s linear infinite;
+          }
+        `}</style>
+      </div>
     </div>
   );
 }

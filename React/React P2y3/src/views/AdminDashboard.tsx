@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, GraduationCap, DollarSign, BookOpen, TrendingUp, AlertCircle, CheckCircle, Calendar } from 'lucide-react';
+import { Users, GraduationCap, DollarSign, BookOpen, TrendingUp, CheckCircle, Calendar } from 'lucide-react';
 
 const AdminDashboard = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -105,48 +105,6 @@ const AdminDashboard = () => {
     gap: '4px',
   });
 
-  const quickActionsGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-    gap: '24px',
-    marginBottom: '48px',
-  };
-
-  const actionCardStyle: React.CSSProperties = {
-    background: '#ffffff',
-    borderRadius: '12px',
-    padding: '28px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    transition: 'all 0.2s',
-    cursor: 'pointer',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-  };
-
-  const actionIconContainerStyle: React.CSSProperties = {
-    width: '48px',
-    height: '48px',
-    borderRadius: '10px',
-    background: '#dcfce7',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  };
-
-  const actionTitleStyle: React.CSSProperties = {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: '4px',
-  };
-
-  const actionDescriptionStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#6b7280',
-    lineHeight: '1.5',
-  };
-
   const recentActivityStyle: React.CSSProperties = {
     background: '#ffffff',
     borderRadius: '12px',
@@ -189,23 +147,6 @@ const AdminDashboard = () => {
     color: '#6b7280',
   };
 
-  const alertCardStyle: React.CSSProperties = {
-    background: '#fef3c7',
-    borderRadius: '12px',
-    padding: '20px',
-    border: '1px solid #fbbf24',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    marginBottom: '24px',
-  };
-
-  const alertTextStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#92400e',
-    fontWeight: '500',
-  };
-
   return (
     <div style={containerStyle}>
       {/* Welcome Card */}
@@ -215,14 +156,6 @@ const AdminDashboard = () => {
         <p style={subtitleStyle}>
           Gestiona estudiantes, cursos, pagos y toda la información de tu institución educativa.
         </p>
-      </div>
-
-      {/* Alerta de Acciones Pendientes */}
-      <div style={alertCardStyle}>
-        <AlertCircle size={24} style={{ color: '#f59e0b', flexShrink: 0 }} />
-        <span style={alertTextStyle}>
-          Tienes 3 solicitudes de inscripción pendientes de revisión
-        </span>
       </div>
 
       {/* Estadísticas Principales */}
@@ -276,79 +209,6 @@ const AdminDashboard = () => {
           <h3 style={statValueStyle}>42</h3>
           <div style={statChangeStyle(false)}>
             <span>Sin cambios</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Acciones Rápidas */}
-      <h2 style={sectionTitleStyle}>Acciones Rápidas</h2>
-      <div style={quickActionsGridStyle}>
-        {/* Gestionar Usuarios */}
-        <div
-          style={actionCardStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-          }}
-        >
-          <div style={actionIconContainerStyle}>
-            <Users size={24} style={{ color: '#10b981' }} />
-          </div>
-          <div>
-            <h3 style={actionTitleStyle}>Gestionar Usuarios</h3>
-            <p style={actionDescriptionStyle}>
-              Administra estudiantes, profesores y personal
-            </p>
-          </div>
-        </div>
-
-        {/* Gestión Académica */}
-        <div
-          style={actionCardStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-          }}
-        >
-          <div style={actionIconContainerStyle}>
-            <GraduationCap size={24} style={{ color: '#10b981' }} />
-          </div>
-          <div>
-            <h3 style={actionTitleStyle}>Gestión Académica</h3>
-            <p style={actionDescriptionStyle}>
-              Administra cursos, materias y asignaciones
-            </p>
-          </div>
-        </div>
-
-        {/* Control de Pagos */}
-        <div
-          style={actionCardStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-          }}
-        >
-          <div style={actionIconContainerStyle}>
-            <DollarSign size={24} style={{ color: '#10b981' }} />
-          </div>
-          <div>
-            <h3 style={actionTitleStyle}>Control de Pagos</h3>
-            <p style={actionDescriptionStyle}>
-              Revisa cuotas, pagos y estado financiero
-            </p>
           </div>
         </div>
       </div>

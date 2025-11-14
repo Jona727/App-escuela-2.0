@@ -226,6 +226,12 @@ const GestionAcademica = () => {
     transition: 'all 0.2s',
   };
 
+  const listContainerStyle: React.CSSProperties = {
+    maxHeight: '420px',
+    overflowY: 'auto',
+    marginTop: '16px',
+  };
+
   const listStyle: React.CSSProperties = {
     listStyle: 'none',
     padding: 0,
@@ -306,27 +312,29 @@ const GestionAcademica = () => {
             </button>
           </div>
 
-          <ul style={listStyle}>
-            {carreras.length === 0 ? (
-              <div style={emptyStateStyle}>
-                 No hay materias creadas todavía
-              </div>
-            ) : (
-              carreras.map((carrera) => (
-                <li key={carrera.id} style={listItemStyle}>
-                  <span style={{ fontWeight: '500' }}>{carrera.name}</span>
-                  <button
-                    style={deleteButtonStyle}
-                    onClick={() => eliminarCarrera(carrera.id)}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
-                  >
-                    🗑️ Eliminar
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
+          <div style={listContainerStyle}>
+            <ul style={listStyle}>
+              {carreras.length === 0 ? (
+                <div style={emptyStateStyle}>
+                   No hay materias creadas todavía
+                </div>
+              ) : (
+                carreras.map((carrera) => (
+                  <li key={carrera.id} style={listItemStyle}>
+                    <span style={{ fontWeight: '500' }}>{carrera.name}</span>
+                    <button
+                      style={deleteButtonStyle}
+                      onClick={() => eliminarCarrera(carrera.id)}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
         </div>
       )}
 
@@ -337,7 +345,7 @@ const GestionAcademica = () => {
           <div style={formContainerStyle}>
             <input
               type="text"
-              placeholder="Nombre del curso (ej: 1° Año, 2° Año)"
+              placeholder="Curso (ej: 1° Año, 2° Año)"
               style={inputStyle}
               value={cursoNombre}
               onChange={(e) => setCursoNombre(e.target.value)}
@@ -354,27 +362,29 @@ const GestionAcademica = () => {
             </button>
           </div>
 
-          <ul style={listStyle}>
-            {cursos.length === 0 ? (
-              <div style={emptyStateStyle}>
-                 No hay cursos creados todavía
-              </div>
-            ) : (
-              cursos.map((curso) => (
-                <li key={curso.id} style={listItemStyle}>
-                  <span style={{ fontWeight: '500' }}>{curso.name}</span>
-                  <button
-                    style={deleteButtonStyle}
-                    onClick={() => eliminarCurso(curso.id)}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
-                  >
-                    🗑️ Eliminar
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
+          <div style={listContainerStyle}>
+            <ul style={listStyle}>
+              {cursos.length === 0 ? (
+                <div style={emptyStateStyle}>
+                   No hay cursos creados todavía
+                </div>
+              ) : (
+                cursos.map((curso) => (
+                  <li key={curso.id} style={listItemStyle}>
+                    <span style={{ fontWeight: '500' }}>{curso.name}</span>
+                    <button
+                      style={deleteButtonStyle}
+                      onClick={() => eliminarCurso(curso.id)}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
         </div>
       )}
 
@@ -417,29 +427,31 @@ const GestionAcademica = () => {
             </button>
           </div>
 
-          <ul style={listStyle}>
-            {asignaciones.length === 0 ? (
-              <div style={emptyStateStyle}>
-                 No hay asignaciones creadas todavía
-              </div>
-            ) : (
-              asignaciones.map((a) => (
-                <li key={a.id} style={listItemStyle}>
-                  <span style={{ fontWeight: '500' }}>
-                    Curso: {a.curso_nombre} <span style={{ color: '#6b7280', fontWeight: '400' }}>→</span> Materia: {a.carrera_nombre}
-                  </span>
-                  <button
-                    style={deleteButtonStyle}
-                    onClick={() => eliminarAsignacion(a.id)}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
-                  >
-                    🗑️ Eliminar
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
+          <div style={listContainerStyle}>
+            <ul style={listStyle}>
+              {asignaciones.length === 0 ? (
+                <div style={emptyStateStyle}>
+                   No hay asignaciones creadas todavía
+                </div>
+              ) : (
+                asignaciones.map((a) => (
+                  <li key={a.id} style={listItemStyle}>
+                    <span style={{ fontWeight: '500' }}>
+                      Curso: {a.curso_nombre} <span style={{ color: '#6b7280', fontWeight: '400' }}>→</span> Materia: {a.carrera_nombre}
+                    </span>
+                    <button
+                      style={deleteButtonStyle}
+                      onClick={() => eliminarAsignacion(a.id)}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
         </div>
       )}
     </div>

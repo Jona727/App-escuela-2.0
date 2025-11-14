@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { BookOpen, CreditCard, Bell, TrendingUp, Calendar, CheckCircle } from 'lucide-react';
+import { BookOpen, CreditCard, Bell, Calendar, CheckCircle } from 'lucide-react';
 
 const Dashboard = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userName = user.firstname || user.firstName || "Usuario";
-  const userType = user.type || "Alumno";
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -272,33 +271,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Stats Section */}
-      <h2 style={sectionTitleStyle}>Resumen de Actividad</h2>
-      <div style={cardsGridStyle}>
-        <div style={statItemStyle}>
-          <TrendingUp size={24} style={statIconStyle} />
-          <div style={statContentStyle}>
-            <p style={statLabelStyle}>Materias Cursando</p>
-            <p style={statValueStyle}>8</p>
-          </div>
-        </div>
-
-        <div style={statItemStyle}>
-          <CheckCircle size={24} style={statIconStyle} />
-          <div style={statContentStyle}>
-            <p style={statLabelStyle}>Materias Aprobadas</p>
-            <p style={statValueStyle}>12</p>
-          </div>
-        </div>
-
-        <div style={statItemStyle}>
-          <Calendar size={24} style={statIconStyle} />
-          <div style={statContentStyle}>
-            <p style={statLabelStyle}>Próxima Clase</p>
-            <p style={{ ...statValueStyle, fontSize: '16px' }}>Mañana 9:00 AM</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

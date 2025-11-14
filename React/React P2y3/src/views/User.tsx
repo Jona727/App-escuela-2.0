@@ -377,7 +377,7 @@ function User() {
             <input
               ref={userRef}
               style={inputStyle}
-              placeholder=" Username"
+              placeholder=" Usuario"
               onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
               onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
             />
@@ -387,7 +387,7 @@ function User() {
                 type="password"
                 ref={passRef}
                 style={inputStyle}
-                placeholder=" Password"
+                placeholder=" Contraseña"
                 onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
                 onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
               />
@@ -475,7 +475,7 @@ function User() {
       {/* Tabla de usuarios */}
       <div style={cardStyle}>
         <h2 style={cardTitleStyle}>
-          👥 Usuarios Registrados
+           Usuarios Registrados
           {usuarios.length > 0 && (
             <span style={{ fontSize: '14px', fontWeight: '400', color: '#6b7280', marginLeft: '12px' }}>
               ({usuarios.length} {usuarios.length === 1 ? 'usuario' : 'usuarios'} cargados)
@@ -490,18 +490,18 @@ function User() {
         >
           {usuarios.length === 0 && !isLoadingUsers ? (
             <div style={emptyStateStyle}>
-              📭 No hay usuarios registrados todavía
+               No hay usuarios registrados todavía
             </div>
           ) : (
             <>
               <table style={tableStyle}>
                 <thead style={theadStyle}>
                   <tr>
-                    <th style={thStyle}>👤 Usuario</th>
-                    <th style={thStyle}>📧 Email</th>
-                    <th style={thStyle}>📝 Nombre Completo</th>
-                    <th style={thStyle}>🏷️ Tipo</th>
-                    <th style={thStyle}>⚙️ Acciones</th>
+                    <th style={thStyle}> Usuario</th>
+                    <th style={thStyle}> Email</th>
+                    <th style={thStyle}> Nombre Completo</th>
+                    <th style={thStyle}> Tipo</th>
+                    <th style={thStyle}> Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -520,7 +520,7 @@ function User() {
                           onMouseEnter={(e) => e.currentTarget.style.background = '#bfdbfe'}
                           onMouseLeave={(e) => e.currentTarget.style.background = '#dbeafe'}
                         >
-                          ✏️ Editar
+                           Editar
                         </button>
                         <button
                           onClick={() => handleEliminar(u.id)}
