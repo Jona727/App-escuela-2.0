@@ -13,317 +13,6 @@ type UserProfile = {
   profile_picture?: string;
 };
 
-const styles = {
-  container: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%)',
-    padding: '32px 16px',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-  },
-  maxWidth: {
-    maxWidth: '1200px',
-    margin: '0 auto'
-  },
-  header: {
-    textAlign: 'center' as const,
-    marginBottom: '32px'
-  },
-  title: {
-    fontSize: '36px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: '8px',
-    margin: '0'
-  },
-  subtitle: {
-    color: '#6b7280',
-    fontSize: '16px',
-    margin: '0'
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '32px',
-    '@media (min-width: 1024px)': {
-      gridTemplateColumns: '1fr 2fr'
-    }
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: '16px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    padding: '32px'
-  },
-  profileCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: '16px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    padding: '32px',
-    textAlign: 'center' as const
-  },
-  avatarContainer: {
-    position: 'relative' as const,
-    marginBottom: '24px'
-  },
-  avatar: {
-    width: '128px',
-    height: '128px',
-    margin: '0 auto',
-    position: 'relative' as const
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: '50%',
-    objectFit: 'cover' as const,
-    border: '4px solid white',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-  },
-  avatarFallback: {
-    width: '100%',
-    height: '100%',
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-    fontSize: '36px',
-    fontWeight: 'bold',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-  },
-  cameraButton: {
-    position: 'absolute' as const,
-    bottom: '8px',
-    right: '8px',
-    backgroundColor: '#4f46e5',
-    color: 'white',
-    borderRadius: '50%',
-    padding: '8px',
-    cursor: 'pointer',
-    border: 'none',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-    transition: 'background-color 0.2s'
-  },
-  hiddenInput: {
-    display: 'none'
-  },
-  userName: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: '8px',
-    margin: '0 0 8px 0'
-  },
-  userHandle: {
-    color: '#6b7280',
-    marginBottom: '16px',
-    fontSize: '16px',
-    margin: '0 0 16px 0'
-  },
-  badge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '6px 12px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: '500'
-  },
-  badgeAdmin: {
-    backgroundColor: '#fef2f2',
-    color: '#991b1b',
-    border: '1px solid #fca5a5'
-  },
-  badgeModerator: {
-    backgroundColor: '#eff6ff',
-    color: '#1e40af',
-    border: '1px solid #93c5fd'
-  },
-  badgeUser: {
-    backgroundColor: '#f0fdf4',
-    color: '#166534',
-    border: '1px solid #86efac'
-  },
-  badgeDefault: {
-    backgroundColor: '#f9fafb',
-    color: '#374151',
-    border: '1px solid #d1d5db'
-  },
-  sectionHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: '24px'
-  },
-  sectionIcon: {
-    marginRight: '12px',
-    color: '#4f46e5'
-  },
-  sectionTitle: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    margin: '0'
-  },
-  infoGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '24px'
-  },
-  infoItem: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '16px',
-    backgroundColor: '#f9fafb',
-    borderRadius: '12px'
-  },
-  infoIcon: {
-    marginRight: '12px',
-    color: '#6b7280'
-  },
-  infoContent: {
-    flex: 1
-  },
-  infoLabel: {
-    fontSize: '14px',
-    color: '#6b7280',
-    margin: '0 0 2px 0'
-  },
-  infoValue: {
-    fontWeight: '600',
-    color: '#1f2937',
-    margin: '0'
-  },
-  formContainer: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '24px'
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column' as const
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: '8px'
-  },
-  input: {
-    width: '100%',
-    padding: '12px 16px',
-    border: '1px solid #d1d5db',
-    borderRadius: '12px',
-    fontSize: '16px',
-    transition: 'all 0.2s',
-    boxSizing: 'border-box' as const
-  },
-  inputFocus: {
-    outline: 'none',
-    borderColor: '#4f46e5',
-    boxShadow: '0 0 0 3px rgba(79, 70, 229, 0.1)'
-  },
-  inputGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '24px'
-  },
-  button: {
-    padding: '12px 32px',
-    background: 'linear-gradient(135deg, #4f46e5 0%, #a855f7 100%)',
-    color: 'white',
-    fontWeight: '600',
-    borderRadius: '12px',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '16px',
-    transition: 'all 0.2s',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-    cursor: 'not-allowed'
-  },
-  spinner: {
-    width: '16px',
-    height: '16px',
-    border: '2px solid transparent',
-    borderTop: '2px solid white',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-    marginRight: '8px'
-  },
-  alertSuccess: {
-    marginTop: '16px',
-    padding: '16px',
-    backgroundColor: '#f0fdf4',
-    color: '#166534',
-    border: '1px solid #bbf7d0',
-    borderRadius: '12px'
-  },
-  alertError: {
-    marginTop: '16px',
-    padding: '16px',
-    backgroundColor: '#fef2f2',
-    color: '#991b1b',
-    border: '1px solid #fca5a5',
-    borderRadius: '12px'
-  },
-  alertText: {
-    fontSize: '14px',
-    fontWeight: '500',
-    margin: '0'
-  },
-  loading: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  loadingContent: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px'
-  },
-  loadingSpinner: {
-    width: '32px',
-    height: '32px',
-    border: '3px solid #e5e7eb',
-    borderTop: '3px solid #4f46e5',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite'
-  },
-  loadingText: {
-    fontSize: '18px',
-    color: '#6b7280'
-  }
-};
-
-// CSS animations
-const styleSheet = document.createElement("style");
-styleSheet.innerText = `
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  @media (min-width: 768px) {
-    .info-grid-responsive {
-      grid-template-columns: 1fr 1fr !important;
-    }
-    .input-grid-responsive {
-      grid-template-columns: 1fr 1fr !important;
-    }
-    .grid-responsive {
-      grid-template-columns: 1fr 2fr !important;
-    }
-  }
-`;
-document.head.appendChild(styleSheet);
-
 export default function PerfilConCambioClave() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -332,6 +21,13 @@ export default function PerfilConCambioClave() {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [profilePicture, setProfilePicture] = useState<string>("");
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -409,8 +105,6 @@ export default function PerfilConCambioClave() {
       reader.onload = (e) => {
         const result = e.target?.result as string;
         setProfilePicture(result);
-        // Aquí podrías enviar la imagen al servidor
-        // uploadProfilePicture(file);
       };
       reader.readAsDataURL(file);
     }
@@ -420,214 +114,453 @@ export default function PerfilConCambioClave() {
     return `${firstname.charAt(0)}${lastname.charAt(0)}`.toUpperCase();
   };
 
-  const getBadgeStyle = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'admin':
-        return { ...styles.badge, ...styles.badgeAdmin };
-      case 'moderator':
-        return { ...styles.badge, ...styles.badgeModerator };
-      case 'user':
-        return { ...styles.badge, ...styles.badgeUser };
-      default:
-        return { ...styles.badge, ...styles.badgeDefault };
-    }
+  // Estilos minimalistas
+  const containerStyle: React.CSSProperties = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: isMobile ? '40px 24px' : '60px 40px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  };
+
+  const headerStyle: React.CSSProperties = {
+    marginBottom: '48px',
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: isMobile ? '32px' : '40px',
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: '8px',
+    letterSpacing: '-0.025em',
+  };
+
+  const subtitleStyle: React.CSSProperties = {
+    fontSize: isMobile ? '14px' : '16px',
+    color: '#6b7280',
+  };
+
+  const gridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : '320px 1fr',
+    gap: '32px',
+    alignItems: 'start',
+  };
+
+  const profileCardStyle: React.CSSProperties = {
+    background: '#ffffff',
+    borderRadius: '12px',
+    padding: '32px',
+    textAlign: 'center',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    border: '1px solid #c2c8d5ff',
+  };
+
+  const avatarContainerStyle: React.CSSProperties = {
+    position: 'relative',
+    width: '128px',
+    height: '128px',
+    margin: '0 auto 24px',
+  };
+
+  const avatarImageStyle: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    objectFit: 'cover',
+    border: '2px solid #4b5563',
+  };
+
+  const avatarFallbackStyle: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    background: '#f3f4f6',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#6b7280',
+    fontSize: '36px',
+    fontWeight: '600',
+    border: '2px solid #4b5563',
+  };
+
+  const cameraButtonStyle: React.CSSProperties = {
+    position: 'absolute',
+    bottom: '0',
+    right: '0',
+    backgroundColor: '#6b7280',
+    color: 'white',
+    borderRadius: '50%',
+    padding: '10px',
+    cursor: 'pointer',
+    border: '3px solid white',
+    transition: 'background 0.2s',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
+  const userNameStyle: React.CSSProperties = {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: '4px',
+  };
+
+  const userHandleStyle: React.CSSProperties = {
+    fontSize: '14px',
+    color: '#6b7280',
+    marginBottom: '16px',
+  };
+
+  const badgeStyle: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '8px 16px',
+    borderRadius: '20px',
+    fontSize: '13px',
+    fontWeight: '500',
+    background: '#5fc683ff',
+    color: '#166534',
+    border: '1px solid #c2c8d5ff',
+  };
+
+  const cardStyle: React.CSSProperties = {
+    background: '#ffffff',
+    borderRadius: '12px',
+    padding: isMobile ? '24px' : '32px',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    marginBottom: '24px',
+    border: '1px solid #c2c8d5ff',
+  };
+
+  const sectionTitleStyle: React.CSSProperties = {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  };
+
+  const infoGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+    gap: '16px',
+  };
+
+  const infoItemStyle: React.CSSProperties = {
+    padding: '16px',
+    background: '#fafafa',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  };
+
+  const infoLabelStyle: React.CSSProperties = {
+    fontSize: '13px',
+    color: '#6b7280',
+    marginBottom: '4px',
+  };
+
+  const infoValueStyle: React.CSSProperties = {
+    fontSize: '15px',
+    fontWeight: '500',
+    color: '#111827',
+  };
+
+  const inputGroupStyle: React.CSSProperties = {
+    marginBottom: '20px',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '13px',
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: '8px',
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '12px 14px',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    fontSize: '15px',
+    boxSizing: 'border-box',
+    transition: 'all 0.15s',
+    fontFamily: 'inherit',
+  };
+
+  const inputGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+    gap: '20px',
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    padding: '12px 24px',
+    background: '#10b981',
+    color: 'white',
+    fontWeight: '500',
+    borderRadius: '8px',
+    border: 'none',
+    cursor: isLoading ? 'not-allowed' : 'pointer',
+    fontSize: '15px',
+    transition: 'all 0.2s',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    fontFamily: 'inherit',
+    opacity: isLoading ? 0.6 : 1,
+    marginTop: '4px',
+  };
+
+  const alertSuccessStyle: React.CSSProperties = {
+    marginTop: '20px',
+    padding: '14px 16px',
+    background: '#f0fdf4',
+    color: '#166534',
+    border: '1px solid #86efac',
+    borderRadius: '8px',
+    fontSize: '14px',
+  };
+
+  const alertErrorStyle: React.CSSProperties = {
+    marginTop: '20px',
+    padding: '14px 16px',
+    background: '#fef2f2',
+    color: '#991b1b',
+    border: '1px solid #fca5a5',
+    borderRadius: '8px',
+    fontSize: '14px',
+  };
+
+  const loadingContainerStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#6b7280',
   };
 
   if (!user) {
     return (
-      <div style={styles.loading}>
-        <div style={styles.loadingContent}>
-          <div style={styles.loadingSpinner}></div>
-          <span style={styles.loadingText}>Cargando...</span>
-        </div>
+      <div style={loadingContainerStyle}>
+        <span>Cargando perfil...</span>
       </div>
     );
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.maxWidth}>
-        {/* Header */}
-        <div style={styles.header}>
-          <h1 style={styles.title}>Mi Perfil</h1>
-          <p style={styles.subtitle}>Gestiona tu información personal y configuración de seguridad</p>
+    <div style={containerStyle}>
+      {/* Header */}
+      <div style={headerStyle}>
+        <h1 style={titleStyle}>Mi Perfil</h1>
+        <p style={subtitleStyle}>Gestiona tu información personal y configuración de seguridad</p>
+      </div>
+
+      <div style={gridStyle}>
+        {/* Profile Card */}
+        <div style={profileCardStyle}>
+          <div style={avatarContainerStyle}>
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt="Foto de perfil"
+                style={avatarImageStyle}
+              />
+            ) : (
+              <div style={avatarFallbackStyle}>
+                {getInitials(user.firstname, user.lastname)}
+              </div>
+            )}
+            <label
+              style={cameraButtonStyle}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#374151'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#6b7280'}
+            >
+              <Camera size={16} />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePictureChange}
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
+
+          <h2 style={userNameStyle}>
+            {user.firstname} {user.lastname}
+          </h2>
+          <p style={userHandleStyle}>@{user.username}</p>
+
+          <div style={badgeStyle}>
+            <UserCheck size={14} />
+            {user.type}
+          </div>
         </div>
 
-        <div style={styles.grid} className="grid-responsive">
-          {/* Profile Card */}
-          <div>
-            <div style={styles.profileCard}>
-              <div style={styles.avatarContainer}>
-                <div style={styles.avatar}>
-                  {profilePicture ? (
-                    <img
-                      src={profilePicture}  
-                      alt="Foto de perfil"
-                      style={styles.avatarImage}
-                    />
-                  ) : (
-                    <div style={styles.avatarFallback}>
-                      {getInitials(user.firstname, user.lastname)}
-                    </div>
-                  )}
-                  <label style={styles.cameraButton}>
-                    <Camera size={16} />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProfilePictureChange}
-                      style={styles.hiddenInput}
-                    />
-                  </label>
+        {/* Main Content */}
+        <div>
+          {/* Profile Information */}
+          <div style={cardStyle}>
+            <h3 style={sectionTitleStyle}>
+              <User size={20} />
+              Información Personal
+            </h3>
+
+            <div style={infoGridStyle}>
+              <div style={infoItemStyle}>
+                <User size={18} style={{ color: '#9ca3af', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <p style={infoLabelStyle}>Nombre</p>
+                  <p style={infoValueStyle}>{user.firstname}</p>
                 </div>
               </div>
-              
-              <h2 style={styles.userName}>
-                {user.firstname} {user.lastname}
-              </h2>
-              <p style={styles.userHandle}>@{user.username}</p>
-              
-              <div>
-                <span style={getBadgeStyle(user.type)}>
-                  <UserCheck size={16} style={{ marginRight: '4px' }} />
-                  {user.type}
-                </span>
+
+              <div style={infoItemStyle}>
+                <User size={18} style={{ color: '#9ca3af', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <p style={infoLabelStyle}>Apellido</p>
+                  <p style={infoValueStyle}>{user.lastname}</p>
+                </div>
+              </div>
+
+              <div style={infoItemStyle}>
+                <Mail size={18} style={{ color: '#9ca3af', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <p style={infoLabelStyle}>Email</p>
+                  <p style={infoValueStyle}>{user.email}</p>
+                </div>
+              </div>
+
+              <div style={infoItemStyle}>
+                <CreditCard size={18} style={{ color: '#9ca3af', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <p style={infoLabelStyle}>DNI</p>
+                  <p style={infoValueStyle}>{user.dni.toLocaleString('es-AR')}</p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            {/* Profile Information */}
-            <div style={styles.card}>
-              <div style={styles.sectionHeader}>
-                <User size={24} style={styles.sectionIcon} />
-                <h3 style={styles.sectionTitle}>Información Personal</h3>
-              </div>
-              
-              <div style={styles.infoGrid} className="info-grid-responsive">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={styles.infoItem}>
-                    <User size={20} style={styles.infoIcon} />
-                    <div style={styles.infoContent}>
-                      <p style={styles.infoLabel}>Nombre</p>
-                      <p style={styles.infoValue}>{user.firstname}</p>
-                    </div>
-                  </div>
-                  
-                  <div style={styles.infoItem}>
-                    <Mail size={20} style={styles.infoIcon} />
-                    <div style={styles.infoContent}>
-                      <p style={styles.infoLabel}>Email</p>
-                      <p style={styles.infoValue}>{user.email}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={styles.infoItem}>
-                    <User size={20} style={styles.infoIcon} />
-                    <div style={styles.infoContent}>
-                      <p style={styles.infoLabel}>Apellido</p>
-                      <p style={styles.infoValue}>{user.lastname}</p>
-                    </div>
-                  </div>
-                  
-                  <div style={styles.infoItem}>
-                    <CreditCard size={20} style={styles.infoIcon} />
-                    <div style={styles.infoContent}>
-                      <p style={styles.infoLabel}>DNI</p>
-                      <p style={styles.infoValue}>{user.dni.toLocaleString()}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Change Password */}
+          <div style={cardStyle}>
+            <h3 style={sectionTitleStyle}>
+              <Lock size={20} />
+              Cambiar Contraseña
+            </h3>
 
-            {/* Change Password */}
-            <div style={styles.card}>
-              <div style={styles.sectionHeader}>
-                <Lock size={24} style={styles.sectionIcon} />
-                <h3 style={styles.sectionTitle}>Cambiar Contraseña</h3>
+            <form onSubmit={handleChangePassword}>
+              <div style={inputGroupStyle}>
+                <label style={labelStyle}>Contraseña actual</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  required
+                  style={inputStyle}
+                  placeholder="Ingresa tu contraseña actual"
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#9ca3af';
+                    e.currentTarget.style.outline = 'none';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                  }}
+                />
               </div>
-              
-              <div style={styles.formContainer}>
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>
-                    Contraseña actual
-                  </label>
+
+              <div style={inputGridStyle}>
+                <div style={inputGroupStyle}>
+                  <label style={labelStyle}>Nueva contraseña</label>
                   <input
                     type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     required
-                    style={styles.input}
-                    placeholder="Ingresa tu contraseña actual"
+                    style={inputStyle}
+                    placeholder="Mínimo 6 caracteres"
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#9ca3af';
+                      e.currentTarget.style.outline = 'none';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                    }}
                   />
                 </div>
 
-                <div style={styles.inputGrid} className="input-grid-responsive">
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>
-                      Nueva contraseña
-                    </label>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                      style={styles.input}
-                      placeholder="Mínimo 6 caracteres"
-                    />
-                  </div>
-
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>
-                      Confirmar nueva contraseña
-                    </label>
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      style={styles.input}
-                      placeholder="Repite la nueva contraseña"
-                    />
-                  </div>
+                <div style={inputGroupStyle}>
+                  <label style={labelStyle}>Confirmar nueva contraseña</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    style={inputStyle}
+                    placeholder="Repite la nueva contraseña"
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#9ca3af';
+                      e.currentTarget.style.outline = 'none';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                    }}
+                  />
                 </div>
-
-                <button
-                  onClick={handleChangePassword}
-                  disabled={isLoading}
-                  style={{
-                    ...styles.button,
-                    ...(isLoading ? styles.buttonDisabled : {})
-                  }}
-                >
-                  {isLoading ? (
-                    <>
-                      <div style={styles.spinner}></div>
-                      Cambiando...
-                    </>
-                  ) : (
-                    'Cambiar contraseña'
-                  )}
-                </button>
               </div>
-              
-              {message && (
-                <div style={
-                  message.includes('correctamente') 
-                    ? styles.alertSuccess 
-                    : styles.alertError
-                }>
-                  <p style={styles.alertText}>{message}</p>
-                </div>
-              )}
-            </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                style={buttonStyle}
+                onMouseEnter={(e) => {
+                  if (!isLoading) e.currentTarget.style.background = '#000000';
+                }}
+                onMouseLeave={(e) => {
+                  if (!isLoading) e.currentTarget.style.background = '#111827';
+                }}
+              >
+                {isLoading ? (
+                  <>
+                    <div style={{
+                      width: '14px',
+                      height: '14px',
+                      border: '2px solid transparent',
+                      borderTop: '2px solid white',
+                      borderRadius: '50%',
+                      animation: 'spin 0.8s linear infinite',
+                    }} />
+                    Cambiando...
+                  </>
+                ) : (
+                  'Cambiar contraseña'
+                )}
+              </button>
+            </form>
+
+            {message && (
+              <div style={message.includes('correctamente') ? alertSuccessStyle : alertErrorStyle}>
+                {message}
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* CSS para animación */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

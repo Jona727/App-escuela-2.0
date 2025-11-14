@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Select from 'react-select';
 
 // Tipos
 interface Usuario {
@@ -22,16 +23,62 @@ interface Pago {
 }
 
 const Pagos = () => {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [pagos, setPagos] = useState<Pago[]>([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const [usuarioPago, setUsuarioPago] = useState("");
   const [cursoPago, setCursoPago] = useState("");
   const [monto, setMonto] = useState("");
   const [mesPago, setMesPago] = useState("");
 
+  // Estados para Infinite Scroll
+  const [opcionesUsuarios, setOpcionesUsuarios] = useState<{ value: number; label: string }[]>([]);
+  const [nextCursor, setNextCursor] = useState<number | null>(null);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
   const mesActual = new Date().toISOString().slice(0, 7);
+
+  // Función para cargar usuarios con paginación
+  const fetchUsers = async (lastSeenId?: number) => {
+    if (isLoadingUsers) return;
+
+    setIsLoadingUsers(true);
+    try {
+      const url = lastSeenId
+        ? `http://localhost:8000/users/all?limit=20&last_seen_id=${lastSeenId}`
+        : `http://localhost:8000/users/all?limit=20`;
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.users && Array.isArray(data.users)) {
+        const newOptions = data.users.map((u: Usuario) => ({
+          value: u.id,
+          label: `${u.firstname} ${u.lastname}`,
+        }));
+
+        setOpcionesUsuarios((prev) => [...prev, ...newOptions]);
+        setNextCursor(data.next_cursor || null);
+      }
+    } catch (error) {
+      console.error("Error loading users:", error);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  // Handler para cargar más usuarios al hacer scroll
+  const handleMenuScrollToBottom = () => {
+    if (nextCursor && !isLoadingUsers) {
+      fetchUsers(nextCursor);
+    }
+  };
 
   const pagosFiltrados = pagos.filter(p =>
     usuarioPago ? p.usuario?.includes(usuarioPago) : true
@@ -51,17 +98,14 @@ const Pagos = () => {
   );
 
   useEffect(() => {
-    fetch("http://localhost:8000/users/all", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
-      .then(res => res.json())
-      .then(data => setUsuarios(Array.isArray(data) ? data : []))
-      .catch(err => {
-        console.error("Error al cargar usuarios:", err);
-        setUsuarios([]);
-      });
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    // Cargar primeros 20 usuarios
+    fetchUsers();
 
     fetch("http://localhost:8000/cursos/all")
       .then(res => res.json())
@@ -71,7 +115,7 @@ const Pagos = () => {
         setCursos([]);
       });
 
-    fetch("http://localhost:8000/payment/all/detailled")
+    fetch("http://localhost:8000/payment/paginated")
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -137,54 +181,264 @@ const Pagos = () => {
       .then(() => setPagos(pagos.filter(p => p.id !== id)));
   };
 
+  // Estilos
+  const containerStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    background: '#f5f7fa',
+    padding: isMobile ? '20px' : '40px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  };
+
+  const headerContainerStyle: React.CSSProperties = {
+    marginBottom: '32px',
+  };
+
+  const headerTitleStyle: React.CSSProperties = {
+    fontSize: isMobile ? '28px' : '32px',
+    fontWeight: '600',
+    color: '#111827',
+    letterSpacing: '-0.02em',
+    marginBottom: '8px',
+  };
+
+  const headerSubtitleStyle: React.CSSProperties = {
+    fontSize: isMobile ? '14px' : '16px',
+    color: '#6b7280',
+  };
+
+  const cardsGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+    gap: '20px',
+    marginBottom: '32px',
+  };
+
+  const statCardStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '12px',
+    padding: isMobile ? '20px' : '24px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    border: '1px solid #e5e7eb',
+  };
+
+  const statLabelStyle: React.CSSProperties = {
+    fontSize: isMobile ? '13px' : '14px',
+    color: '#6b7280',
+    fontWeight: '500',
+    marginBottom: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  };
+
+  const statValueBaseStyle: React.CSSProperties = {
+    fontSize: isMobile ? '28px' : '32px',
+    fontWeight: '600',
+  };
+
+  const registroCardStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '12px',
+    padding: isMobile ? '24px' : '32px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    border: '1px solid #e5e7eb',
+    marginBottom: '32px',
+  };
+
+  const registroTitleStyle: React.CSSProperties = {
+    fontSize: isMobile ? '18px' : '20px',
+    fontWeight: '600',
+    marginBottom: '20px',
+    color: '#111827',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  };
+
+  const formGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',
+    gap: isMobile ? '12px' : '16px',
+    marginBottom: '20px',
+  };
+
+  const inputStyle: React.CSSProperties = {
+    padding: isMobile ? '10px 14px' : '12px 16px',
+    borderRadius: '8px',
+    border: '1px solid #d1d5db',
+    fontSize: isMobile ? '14px' : '15px',
+    fontFamily: 'inherit',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+    width: '100%',
+  };
+
+  const selectStyle: React.CSSProperties = {
+    ...inputStyle,
+    cursor: 'pointer',
+    background: 'white',
+  };
+
+  const primaryButtonStyle: React.CSSProperties = {
+    padding: isMobile ? '12px 24px' : '12px 32px',
+    borderRadius: '8px',
+    border: 'none',
+    fontSize: isMobile ? '14px' : '15px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    background: '#10b981',
+    color: 'white',
+    fontFamily: 'inherit',
+    transition: 'all 0.2s',
+    boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
+    width: isMobile ? '100%' : 'auto',
+  };
+
+  const tableContainerStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    border: '1px solid #e5e7eb',
+    overflowX: 'auto',
+  };
+
+  const tableStyle: React.CSSProperties = {
+    width: '100%',
+    borderCollapse: 'collapse',
+  };
+
+  const theadStyle: React.CSSProperties = {
+    background: '#f9fafb',
+  };
+
+  const thStyle: React.CSSProperties = {
+    padding: isMobile ? '12px 16px' : '16px 20px',
+    textAlign: 'left',
+    fontSize: isMobile ? '13px' : '14px',
+    fontWeight: '600',
+    color: '#374151',
+    borderBottom: '2px solid #e5e7eb',
+  };
+
+  const tdStyle: React.CSSProperties = {
+    padding: isMobile ? '12px 16px' : '16px 20px',
+    fontSize: isMobile ? '13px' : '14px',
+    color: '#4b5563',
+    borderBottom: '1px solid #f3f4f6',
+  };
+
+  const deleteButtonStyle: React.CSSProperties = {
+    padding: '6px 14px',
+    borderRadius: '6px',
+    border: 'none',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    background: '#fee2e2',
+    color: '#dc2626',
+    fontFamily: 'inherit',
+    transition: 'all 0.2s',
+  };
+
+  const emptyStateStyle: React.CSSProperties = {
+    textAlign: 'center',
+    padding: '64px 24px',
+    color: '#9ca3af',
+    fontSize: isMobile ? '14px' : '15px',
+  };
+
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Gestión de Pagos</h1>
-          <p className="text-gray-600 mt-2">Administra pagos y cuotas</p>
+    <div style={containerStyle}>
+      {/* Header */}
+      <div style={headerContainerStyle}>
+        <h1 style={headerTitleStyle}>💰 Gestión de Pagos</h1>
+        <p style={headerSubtitleStyle}>Administra pagos y cuotas de manera eficiente</p>
+      </div>
+
+      {/* Tarjetas de estadísticas */}
+      <div style={cardsGridStyle}>
+        <div style={statCardStyle}>
+          <div style={statLabelStyle}>
+            📅 Total del Mes
+          </div>
+          <p style={{ ...statValueBaseStyle, color: '#10b981' }}>
+            ${totalMes.toLocaleString('es-AR')}
+          </p>
+        </div>
+
+        <div style={statCardStyle}>
+          <div style={statLabelStyle}>
+            📊 Total del Año
+          </div>
+          <p style={{ ...statValueBaseStyle, color: '#2563eb' }}>
+            ${totalAnual.toLocaleString('es-AR')}
+          </p>
+        </div>
+
+        <div style={statCardStyle}>
+          <div style={statLabelStyle}>
+            💎 Total General
+          </div>
+          <p style={{ ...statValueBaseStyle, color: '#8b5cf6' }}>
+            ${totalGeneral.toLocaleString('es-AR')}
+          </p>
         </div>
       </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white p-4 shadow rounded">
-          <h3 className="text-gray-700">Total del Mes</h3>
-          <p className="text-2xl font-bold text-green-600">${totalMes}</p>
-        </div>
-        <div className="bg-white p-4 shadow rounded">
-          <h3 className="text-gray-700">Total del Año</h3>
-          <p className="text-2xl font-bold text-blue-600">${totalAnual}</p>
-        </div>
-        <div className="bg-white p-4 shadow rounded">
-          <h3 className="text-gray-700">Total General</h3>
-          <p className="text-2xl font-bold text-purple-600">${totalGeneral}</p>
-        </div>
-      </div>
+      {/* Formulario de registro */}
+      <div style={registroCardStyle}>
+        <h2 style={registroTitleStyle}>
+          ✨ Registrar Nuevo Pago
+        </h2>
 
-      {/* Registro */}
-      <div className="bg-gray-50 p-4 rounded shadow">
-        <h2 className="font-bold mb-2">Registrar nuevo pago</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-          <select
-            value={usuarioPago}
-            onChange={e => setUsuarioPago(e.target.value)}
-            className="border p-2 rounded"
-          >
-            <option value="">Seleccionar alumno</option>
-            {usuarios.map(u => (
-              <option key={u.id} value={u.id}>
-                {u.firstname} {u.lastname}
-              </option>
-            ))}
-          </select>
+        <div style={formGridStyle}>
+          <Select
+            options={opcionesUsuarios}
+            value={opcionesUsuarios.find(op => op.value === parseInt(usuarioPago)) || null}
+            onChange={(selectedOption) => setUsuarioPago(selectedOption ? String(selectedOption.value) : "")}
+            onMenuScrollToBottom={handleMenuScrollToBottom}
+            placeholder="👤 Buscar y seleccionar alumno..."
+            isClearable
+            isSearchable
+            isLoading={isLoadingUsers}
+            loadingMessage={() => "Cargando más alumnos..."}
+            noOptionsMessage={() => "No se encontraron alumnos"}
+            styles={{
+              control: (base, state) => ({
+                ...base,
+                padding: isMobile ? '2px 6px' : '4px 8px',
+                borderRadius: '8px',
+                border: state.isFocused ? '1px solid #2563eb' : '1px solid #d1d5db',
+                boxShadow: 'none',
+                fontSize: isMobile ? '14px' : '15px',
+                fontFamily: 'inherit',
+                '&:hover': {
+                  borderColor: '#d1d5db',
+                }
+              }),
+              menu: (base) => ({
+                ...base,
+                borderRadius: '8px',
+                marginTop: '4px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              }),
+              option: (base, state) => ({
+                ...base,
+                backgroundColor: state.isSelected ? '#10b981' : state.isFocused ? '#f3f4f6' : 'white',
+                color: state.isSelected ? 'white' : '#374151',
+                cursor: 'pointer',
+              }),
+            }}
+          />
 
           <select
             value={cursoPago}
             onChange={e => setCursoPago(e.target.value)}
-            className="border p-2 rounded"
+            style={selectStyle}
+            onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
+            onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
           >
-            <option value="">Seleccionar curso</option>
+            <option value="">🎓 Seleccionar curso</option>
             {cursos.map(c => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -194,61 +448,79 @@ const Pagos = () => {
 
           <input
             type="number"
-            placeholder="Monto"
+            placeholder="💵 Monto"
             value={monto}
             onChange={e => setMonto(e.target.value)}
-            className="border p-2 rounded"
+            style={inputStyle}
+            onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
+            onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
           />
+
           <input
             type="month"
             value={mesPago}
             onChange={e => setMesPago(e.target.value)}
-            className="border p-2 rounded"
+            style={inputStyle}
+            onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
+            onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
           />
         </div>
+
         <button
           onClick={registrarPago}
-          className="bg-green-600 text-white mt-4 px-4 py-2 rounded hover:bg-green-700"
+          style={primaryButtonStyle}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+          onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
         >
-          Registrar
+          💾 Registrar Pago
         </button>
       </div>
 
-      {/* Tabla */}
-      <div className="bg-white mt-6 rounded shadow overflow-x-auto">
-        <table className="min-w-full">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-2 text-left">Alumno</th>
-              <th className="px-4 py-2 text-left">Curso</th>
-              <th className="px-4 py-2 text-left">Monto</th>
-              <th className="px-4 py-2 text-left">Mes</th>
-              <th className="px-4 py-2 text-left">Fecha</th>
-              <th className="px-4 py-2 text-left">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pagosFiltrados.map(p => (
-              <tr key={p.id} className="border-t">
-                <td className="px-4 py-2">{p.usuario}</td>
-                <td className="px-4 py-2">{p.carrera}</td>
-                <td className="px-4 py-2">${p.amount}</td>
-                <td className="px-4 py-2">{p.mes_afectado}</td>
-                <td className="px-4 py-2">
-                  {new Date(p.fecha_pago).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-2">
-                  <button
-                    onClick={() => eliminarPago(p.id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Eliminar
-                  </button>
-                </td>
+      {/* Tabla de pagos */}
+      <div style={tableContainerStyle}>
+        {pagosFiltrados.length === 0 ? (
+          <div style={emptyStateStyle}>
+            📭 No hay pagos registrados todavía
+          </div>
+        ) : (
+          <table style={tableStyle}>
+            <thead style={theadStyle}>
+              <tr>
+                <th style={thStyle}>👤 Alumno</th>
+                <th style={thStyle}>🎓 Curso</th>
+                <th style={thStyle}>💵 Monto</th>
+                <th style={thStyle}>📅 Mes</th>
+                <th style={thStyle}>📆 Fecha</th>
+                <th style={thStyle}>⚙️ Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pagosFiltrados.map(p => (
+                <tr key={p.id}>
+                  <td style={tdStyle}>{p.usuario}</td>
+                  <td style={tdStyle}>{p.carrera}</td>
+                  <td style={{ ...tdStyle, fontWeight: '600', color: '#10b981' }}>
+                    ${p.amount.toLocaleString('es-AR')}
+                  </td>
+                  <td style={tdStyle}>{p.mes_afectado}</td>
+                  <td style={tdStyle}>
+                    {new Date(p.fecha_pago).toLocaleDateString('es-AR')}
+                  </td>
+                  <td style={tdStyle}>
+                    <button
+                      onClick={() => eliminarPago(p.id)}
+                      style={deleteButtonStyle}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

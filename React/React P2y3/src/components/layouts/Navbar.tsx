@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, LogOut } from "lucide-react";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -23,199 +23,266 @@ function Navbar() {
     navigate("/login");
   };
 
-  const baseLinkStyle = {
-    textDecoration: "none",
-    color: "#333",
-    fontWeight: "normal",
-    fontSize: "14px",
-    padding: "4px 8px",
-    transition: "all 0.2s ease",
-    display: "inline-block",
+  // Estilos
+  const navStyle: React.CSSProperties = {
+    background: '#ffffff',
+    padding: isMobile ? '16px 20px' : '16px 40px',
+    display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
+    alignItems: isMobile ? 'flex-start' : 'center',
+    justifyContent: 'space-between',
+    borderBottom: '1px solid #e9edef',
+    gap: isMobile ? '16px' : '0',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
   };
 
-  const linkStyle = ({ isActive }: { isActive: boolean }) => ({
-    ...baseLinkStyle,
-    color: isActive ? "#4f46e5" : "#333",
-    fontWeight: isActive ? "bold" : "normal",
-  });
-
-  const hoverEffect: React.CSSProperties = {
-    transition: "all 0.2s ease",
-    cursor: "pointer",
+  const logoContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
   };
 
-  const hoverScale: React.CSSProperties = {
-    ...hoverEffect,
-    transform: "scale(1.1)",
+  const logoIconStyle: React.CSSProperties = {
+    width: '40px',
+    height: '40px',
+    borderRadius: '8px',
+    background: '#25D366',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   };
+
+  const logoTextStyle: React.CSSProperties = {
+    fontSize: isMobile ? '18px' : '20px',
+    fontWeight: '600',
+    color: '#111b21',
+    margin: 0,
+  };
+
+  const linksContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
+    alignItems: isMobile ? 'flex-start' : 'center',
+    gap: isMobile ? '12px' : '32px',
+  };
+
+  const userSectionStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    alignSelf: isMobile ? 'flex-start' : 'center',
+  };
+
+  const avatarStyle: React.CSSProperties = {
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    background: '#25D366',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    fontWeight: '600',
+    fontSize: '14px',
+  };
+
+  const userInfoStyle: React.CSSProperties = {
+    display: isMobile ? 'none' : 'block',
+  };
+
+  const userNameStyle: React.CSSProperties = {
+    margin: 0,
+    fontWeight: '500',
+    fontSize: '14px',
+    color: '#111b21',
+  };
+
+  const userTypeStyle: React.CSSProperties = {
+    margin: 0,
+    fontSize: '12px',
+    color: '#667781',
+  };
+
+  const logoutButtonStyle: React.CSSProperties = {
+    background: '#ffffff',
+    color: '#dc2626',
+    border: '1px solid #e5e7eb',
+    padding: isMobile ? '8px 12px' : '8px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+    transition: 'all 0.2s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontFamily: 'inherit',
+  };
+
+  // CSS para la animación de la línea verde
+  const styleSheet = `
+    @keyframes slideIn {
+      from {
+        width: 0;
+      }
+      to {
+        width: 100%;
+      }
+    }
+
+    .nav-link {
+      position: relative;
+      text-decoration: none;
+      color: #54656f;
+      font-weight: 500;
+      font-size: 15px;
+      padding: 8px 0;
+      transition: color 0.2s ease;
+      display: inline-block;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background-color: #25D366;
+      transition: width 0.3s ease;
+    }
+
+    .nav-link:hover {
+      color: #25D366;
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+      animation: slideIn 0.3s ease forwards;
+    }
+
+    .nav-link.active {
+      color: #111b21;
+      font-weight: 600;
+    }
+
+    .nav-link.active::after {
+      width: 100%;
+      background-color: #25D366;
+    }
+  `;
 
   return (
-    <nav
-      style={{
-        background: "linear-gradient(to right, #f8fafc, #f1f5ff)",
-        padding: "12px 24px",
-        display: "flex",
-        flexDirection: isMobile ? "column" : "row",
-        alignItems: isMobile ? "flex-start" : "center",
-        justifyContent: "space-between",
-        borderBottom: "1px solid #e2e8f0",
-        gap: isMobile ? "12px" : "0",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      {/* Logo e ícono */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <div
-          style={{
-            width: "40px",
-            height: "40px",
-            borderRadius: "10px",
-            background: "linear-gradient(to right, #7c3aed, #8b5cf6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <GraduationCap color="white" size={20} />
+    <>
+      <style>{styleSheet}</style>
+      <nav style={navStyle}>
+        {/* Logo */}
+        <div style={logoContainerStyle}>
+          <div style={logoIconStyle}>
+            <GraduationCap color="white" size={24} strokeWidth={2.5} />
+          </div>
+          <h1 style={logoTextStyle}>Instituto Mariano Moreno</h1>
         </div>
-        <h1
-          style={{
-            fontSize: "20px",
-            fontWeight: "bold",
-            background: "linear-gradient(to right, #7c3aed, #8b5cf6)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
-          Instituto Mariano Moreno
-        </h1>
-      </div>
 
-      {/* Links */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: isMobile ? "column" : "row",
-          alignItems: isMobile ? "flex-start" : "center",
-          gap: isMobile ? "8px" : "1.5rem",
-        }}
-      >
-        <NavLink to="/dashboard" style={linkStyle}>
-          {({ isActive }) => (
-            <span style={{ ...linkStyle({ isActive }), ...hoverEffect }} onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")} onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+        {/* Links de navegación */}
+        <div style={linksContainerStyle}>
+          {userType?.toLowerCase() === "alumno" && (
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+            >
               Dashboard
-            </span>
+            </NavLink>
           )}
-        </NavLink>
-        <NavLink to="/profile" style={linkStyle}>
-          {({ isActive }) => (
-            <span style={{ ...linkStyle({ isActive }), ...hoverEffect }} onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")} onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-              Perfil
-            </span>
+
+          <NavLink
+            to="/profile"
+            className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+          >
+            Perfil
+          </NavLink>
+
+          {userType?.toLowerCase() === "alumno" && (
+            <>
+              <NavLink
+                to="/MiCursada"
+                className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+              >
+                Mi Cursada
+              </NavLink>
+              <NavLink
+                to="/MisPagos"
+                className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+              >
+                Mis Pagos
+              </NavLink>
+            </>
           )}
-        </NavLink>
 
-        {userType === "Alumno" && (
-          <>
-            <NavLink to="/MiCursada" style={linkStyle}>
-              {({ isActive }) => (
-                <span style={{ ...linkStyle({ isActive }), ...hoverEffect }} onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")} onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-                  Mi Cursada
-                </span>
-              )}
-            </NavLink>
-            <NavLink to="/MisPagos" style={linkStyle}>
-              {({ isActive }) => (
-                <span style={{ ...linkStyle({ isActive }), ...hoverEffect }} onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")} onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-                  Mis Pagos
-                </span>
-              )}
-            </NavLink>
-          </>
-        )}
-
-        {userType === "Administrador" && (
-          <>
-            <NavLink to="/user" style={linkStyle}>
-              {({ isActive }) => (
-                <span style={{ ...linkStyle({ isActive }), ...hoverEffect }} onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")} onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-                  Usuarios
-                </span>
-              )}
-            </NavLink>
-            <NavLink to="/GestionAcademica" style={linkStyle}>
-              {({ isActive }) => (
-                <span style={{ ...linkStyle({ isActive }), ...hoverEffect }} onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")} onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-                  Gestión Académica
-                </span>
-              )}
-            </NavLink>
-            <NavLink to="/pagos" style={linkStyle}>
-              {({ isActive }) => (
-                <span style={{ ...linkStyle({ isActive }), ...hoverEffect }} onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")} onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-                  Pagos
-                </span>
-              )}
-            </NavLink>
-            <NavLink to="/inscripciones" style={linkStyle}>
-              {({ isActive }) => (
-                <span style={{ ...linkStyle({ isActive }), ...hoverEffect }} onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")} onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-                  Inscripciones
-                </span>
-              )}
-            </NavLink>
-          </>
-        )}
-      </div>
-
-      {/* Perfil usuario */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          alignSelf: isMobile ? "flex-start" : "center",
-        }}
-      >
-        <div
-          style={{
-            width: "36px",
-            height: "36px",
-            borderRadius: "9999px",
-            background: "linear-gradient(to right, #7c3aed, #8b5cf6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-            fontWeight: "bold",
-          }}
-        >
-          {userName?.[0]?.toUpperCase() || "U"}
+          {userType?.toLowerCase() === "administrador" && (
+            <>
+              <NavLink
+                to="/admin-dashboard"
+                className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+              >
+                Dashboard
+              </NavLink>
+              <NavLink
+                to="/user"
+                className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+              >
+                Usuarios
+              </NavLink>
+              <NavLink
+                to="/GestionAcademica"
+                className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+              >
+                Gestión
+              </NavLink>
+              <NavLink
+                to="/pagos"
+                className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+              >
+                Pagos
+              </NavLink>
+              <NavLink
+                to="/inscripciones"
+                className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+              >
+                Inscripciones
+              </NavLink>
+            </>
+          )}
         </div>
-        <div>
-          <p style={{ margin: 0, fontWeight: 500 }}>{userName}</p>
-          <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>{userType}</p>
+
+        {/* Sección de usuario */}
+        <div style={userSectionStyle}>
+          <div style={avatarStyle}>
+            {userName?.[0]?.toUpperCase() || "U"}
+          </div>
+          <div style={userInfoStyle}>
+            <p style={userNameStyle}>{userName}</p>
+            <p style={userTypeStyle}>{userType}</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            style={logoutButtonStyle}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#fee2e2';
+              e.currentTarget.style.borderColor = '#fecaca';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#ffffff';
+              e.currentTarget.style.borderColor = '#e5e7eb';
+            }}
+          >
+            <LogOut size={16} />
+            {!isMobile && 'Salir'}
+          </button>
         </div>
-        <button
-          onClick={handleLogout}
-          style={{
-            background: "#e11d48",
-            color: "#fff",
-            border: "none",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            marginLeft: "10px",
-            cursor: "pointer",
-            fontSize: "14px",
-            transition: "all 0.2s ease",
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
-        >
-          Logout
-        </button>
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 }
 

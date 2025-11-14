@@ -9,7 +9,8 @@ import { lazy } from "react";
 
 function App() {
 
- const Dashboard = lazy(() => import("./views/Dashboard"));
+  const Dashboard = lazy(() => import("./views/Dashboard"));
+  const AdminDashboard = lazy(() => import("./views/AdminDashboard"));
   const Inscripciones = lazy(() => import("./views/Inscripciones"));
   const GestionAcademica = lazy(() => import("./views/GestionAcademica"));
   const Pagos = lazy(() => import("./views/Pagos"));
@@ -38,6 +39,7 @@ function App() {
 
             {/* Rutas sólo para ADMIN */}
             <Route element={<AdminRoutes />}>
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
               <Route path="/GestionAcademica" element={<GestionAcademica />} />
               <Route path="/pagos" element={<Pagos />} />
               <Route path="/user" element={<User />} />

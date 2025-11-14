@@ -10,7 +10,7 @@ function AdminRoutes() {
     return <Navigate to="/login" />;
   }
 
-  if (role !== "Administrador") {
+  if (role?.toLowerCase() !== "administrador") {
     return <Navigate to="/dashboard" />;  // o a donde quieras redirigir si no es admin
   }
 

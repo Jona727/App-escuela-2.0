@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { GraduationCap } from 'lucide-react';
+import { BookOpen, CreditCard, Bell, TrendingUp, Calendar, CheckCircle } from 'lucide-react';
 
 const Dashboard = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const userName = user.firstName || "Usuario";
+  const userName = user.firstname || user.firstName || "Usuario";
   const userType = user.type || "Alumno";
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -14,150 +14,290 @@ const Dashboard = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const mainStyle: React.CSSProperties = {
-    minHeight: '100vh',
-    background: 'linear-gradient(to bottom right, #eff6ff, #f5f3ff)',
-    padding: isMobile ? '20px' : '40px',
-    fontFamily: 'Arial, sans-serif',
+  // Estilos minimalistas
+  const containerStyle: React.CSSProperties = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: isMobile ? '40px 24px' : '60px 40px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   };
 
-  const welcomeCard: React.CSSProperties = {
-    background: 'white',
-    borderRadius: '24px',
-    overflow: 'hidden',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-    marginBottom: '40px',
+  const welcomeCardStyle: React.CSSProperties = {
+    background: '#ffffff',
+    borderRadius: '12px',
+    padding: isMobile ? '32px 24px' : '40px',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    marginBottom: '48px',
   };
 
-  const welcomeTop: React.CSSProperties = {
-    background: 'linear-gradient(to right,rgb(41, 175, 155),rgb(51, 201, 234),rgb(13, 93, 150))',
-    color: 'white',
-    padding: isMobile ? '24px' : '40px',
-    display: 'flex',
-    flexDirection: isMobile ? 'column' : 'row',
-    justifyContent: 'space-between',
-    alignItems: isMobile ? 'center' : 'center',
-    textAlign: isMobile ? 'center' : 'left',
-    gap: isMobile ? '20px' : '0',
+  const greetingStyle: React.CSSProperties = {
+    fontSize: isMobile ? '14px' : '16px',
+    color: '#6b7280',
+    marginBottom: '8px',
+    fontWeight: '500',
   };
 
-  const welcomeText: React.CSSProperties = {
-    maxWidth: isMobile ? '100%' : '60%',
+  const userNameStyle: React.CSSProperties = {
+    fontSize: isMobile ? '28px' : '36px',
+    fontWeight: '700',
+    color: '#10b981',
+    marginBottom: '8px',
+    letterSpacing: '-0.025em',
   };
 
-  const profileCircle: React.CSSProperties = {
-    width: isMobile ? '60px' : '80px',
-    height: isMobile ? '60px' : '80px',
-    borderRadius: '9999px',
-    background: 'linear-gradient(to right,rgb(138, 161, 42),rgb(98, 213, 69))',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
+  const subtitleStyle: React.CSSProperties = {
+    fontSize: isMobile ? '15px' : '16px',
+    color: '#6b7280',
+    lineHeight: '1.6',
+  };
+
+  const sectionTitleStyle: React.CSSProperties = {
+    fontSize: isMobile ? '20px' : '24px',
     fontWeight: '600',
-    fontSize: isMobile ? '20px' : '24px',
+    color: '#111827',
+    marginBottom: '24px',
+    letterSpacing: '-0.02em',
   };
 
-  const welcomeBottom: React.CSSProperties = {
-    padding: isMobile ? '24px' : '40px',
-    background: 'linear-gradient(to bottom, #f9fafb, #ffffff)',
-    display: 'flex',
-    justifyContent: 'center',
+  const cardsGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))',
+    gap: '24px',
+    marginBottom: '48px',
   };
 
-  const illustrationBox: React.CSSProperties = {
-    width: '100%',
-    maxWidth: '400px',
-    height: '200px',
-    background: 'linear-gradient(to bottom right, #e0e7ff, #ede9fe)',
-    borderRadius: '20px',
+  const quickAccessCardStyle: React.CSSProperties = {
+    background: '#ffffff',
+    borderRadius: '12px',
+    padding: '28px',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    transition: 'all 0.2s',
+    cursor: 'pointer',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
     flexDirection: 'column',
+    gap: '16px',
   };
 
-  const iconSmall: React.CSSProperties = {
-    width: '60px',
-    height: '60px',
-    borderRadius: '9999px',
-    background: 'linear-gradient(to right, #6366f1, #9333ea)',
+  const iconContainerStyle: React.CSSProperties = {
+    width: '48px',
+    height: '48px',
+    borderRadius: '10px',
+    background: '#dcfce7',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '10px',
+    marginBottom: '4px',
   };
 
-  const motivationCard: React.CSSProperties = {
-    textAlign: 'center',
-    background: 'rgba(255, 255, 255, 0.7)',
-    backdropFilter: 'blur(6px)',
-    borderRadius: '20px',
-    padding: '30px',
-    maxWidth: '800px',
-    margin: '0 auto',
-    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.05)',
+  const cardTitleStyle: React.CSSProperties = {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: '4px',
   };
 
-  const gradientText: React.CSSProperties = {
-    fontSize: isMobile ? '20px' : '24px',
-    fontWeight: 'bold',
-    marginBottom: '16px',
-    background: 'linear-gradient(to right, #4f46e5, #9333ea)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
+  const cardDescriptionStyle: React.CSSProperties = {
+    fontSize: '14px',
+    color: '#6b7280',
+    lineHeight: '1.5',
   };
 
-  const motivationText: React.CSSProperties = {
-    fontSize: isMobile ? '16px' : '18px',
-    color: '#4b5563',
-    maxWidth: '600px',
-    margin: '0 auto',
+  const progressContainerStyle: React.CSSProperties = {
+    marginTop: '12px',
+  };
+
+  const progressLabelStyle: React.CSSProperties = {
+    fontSize: '13px',
+    color: '#6b7280',
+    marginBottom: '8px',
+    display: 'flex',
+    justifyContent: 'space-between',
+  };
+
+  const progressBarBackgroundStyle: React.CSSProperties = {
+    width: '100%',
+    height: '6px',
+    background: '#f3f4f6',
+    borderRadius: '10px',
+    overflow: 'hidden',
+  };
+
+  const progressBarFillStyle = (percentage: number): React.CSSProperties => ({
+    width: `${percentage}%`,
+    height: '100%',
+    background: '#10b981',
+    borderRadius: '10px',
+    transition: 'width 0.3s ease',
+  });
+
+  const statItemStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '16px',
+    background: '#fafafa',
+    borderRadius: '8px',
+  };
+
+  const statIconStyle: React.CSSProperties = {
+    color: '#10b981',
+    flexShrink: 0,
+  };
+
+  const statContentStyle: React.CSSProperties = {
+    flex: 1,
+  };
+
+  const statLabelStyle: React.CSSProperties = {
+    fontSize: '13px',
+    color: '#6b7280',
+    marginBottom: '4px',
+  };
+
+  const statValueStyle: React.CSSProperties = {
+    fontSize: '20px',
+    fontWeight: '700',
+    color: '#111827',
   };
 
   return (
-    <div style={mainStyle}>
-      {/* Welcome Section */}
-      <div style={welcomeCard}>
-        <div style={welcomeTop}>
-          <div style={welcomeText}>
-            <h2 style={{ fontSize: isMobile ? '26px' : '32px', fontWeight: 'bold', marginBottom: '12px' }}>
-              ¡Bienvenido, {userName}!
-            </h2>
-            <p style={{ fontSize: isMobile ? '18px' : '20px', opacity: 0.9, marginBottom: '10px' }}>
-              Tipo de usuario: {userType}
-            </p>
-            <p style={{ fontSize: isMobile ? '14px' : '16px', opacity: 0.8 }}>
-              Accede a todas las funcionalidades de gestión desde el menú de navegación.
-            </p>
+    <div style={containerStyle}>
+      {/* Welcome Card */}
+      <div style={welcomeCardStyle}>
+        <p style={greetingStyle}>Bienvenido de nuevo,</p>
+        <h1 style={userNameStyle}>{userName}</h1>
+        <p style={subtitleStyle}>
+          Panel de control - Gestiona tu actividad académica y mantente al día con tus tareas.
+        </p>
+      </div>
+
+      {/* Quick Access Cards */}
+      <h2 style={sectionTitleStyle}>Acceso Rápido</h2>
+      <div style={cardsGridStyle}>
+        {/* Mi Cursada Card */}
+        <div
+          style={quickAccessCardStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+          }}
+        >
+          <div style={iconContainerStyle}>
+            <BookOpen size={24} style={{ color: '#10b981' }} />
           </div>
           <div>
-            <div style={profileCircle}>
-              <GraduationCap size={isMobile ? 30 : 40} color="white" />
+            <h3 style={cardTitleStyle}>Mi Cursada</h3>
+            <p style={cardDescriptionStyle}>
+              Accede a tus materias, horarios y progreso académico
+            </p>
+          </div>
+          <div style={progressContainerStyle}>
+            <div style={progressLabelStyle}>
+              <span>Progreso del semestre</span>
+              <span style={{ fontWeight: '600', color: '#10b981' }}>75%</span>
+            </div>
+            <div style={progressBarBackgroundStyle}>
+              <div style={progressBarFillStyle(75)}></div>
             </div>
           </div>
         </div>
 
-        {/* Ilustración */}
-        <div style={welcomeBottom}>
-          <div style={illustrationBox}>
-            <div style={iconSmall}>
-              <GraduationCap size={30} color="white" />
-            </div>
-            <p style={{ color: '#6b7280', fontWeight: 500, fontSize: isMobile ? '14px' : '16px' }}>
-              Sistema de Gestión Educativa
+        {/* Próximos Pagos Card */}
+        <div
+          style={quickAccessCardStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+          }}
+        >
+          <div style={iconContainerStyle}>
+            <CreditCard size={24} style={{ color: '#10b981' }} />
+          </div>
+          <div>
+            <h3 style={cardTitleStyle}>Próximos Pagos</h3>
+            <p style={cardDescriptionStyle}>
+              Revisa tus cuotas pendientes y estado de cuenta
             </p>
+          </div>
+          <div style={{ marginTop: '12px' }}>
+            <div style={statItemStyle}>
+              <Calendar size={18} style={statIconStyle} />
+              <div style={statContentStyle}>
+                <p style={statLabelStyle}>Próximo vencimiento</p>
+                <p style={{ ...statValueStyle, fontSize: '16px' }}>15 de Diciembre</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Novedades Card */}
+        <div
+          style={quickAccessCardStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+          }}
+        >
+          <div style={iconContainerStyle}>
+            <Bell size={24} style={{ color: '#10b981' }} />
+          </div>
+          <div>
+            <h3 style={cardTitleStyle}>Novedades</h3>
+            <p style={cardDescriptionStyle}>
+              Mantente informado sobre anuncios y actualizaciones
+            </p>
+          </div>
+          <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CheckCircle size={16} style={{ color: '#10b981', flexShrink: 0 }} />
+              <span style={{ fontSize: '14px', color: '#6b7280' }}>Inscripciones abiertas</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CheckCircle size={16} style={{ color: '#10b981', flexShrink: 0 }} />
+              <span style={{ fontSize: '14px', color: '#6b7280' }}>Nuevo contenido disponible</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Motivational Section */}
-      <div style={motivationCard}>
-        <h3 style={gradientText}>Tu centro de control educativo</h3>
-        <p style={motivationText}>
-          Utiliza el menú de navegación para acceder a todas las herramientas y funcionalidades
-          que necesitas para administrar eficientemente tu institución educativa.
-        </p>
+      {/* Stats Section */}
+      <h2 style={sectionTitleStyle}>Resumen de Actividad</h2>
+      <div style={cardsGridStyle}>
+        <div style={statItemStyle}>
+          <TrendingUp size={24} style={statIconStyle} />
+          <div style={statContentStyle}>
+            <p style={statLabelStyle}>Materias Cursando</p>
+            <p style={statValueStyle}>8</p>
+          </div>
+        </div>
+
+        <div style={statItemStyle}>
+          <CheckCircle size={24} style={statIconStyle} />
+          <div style={statContentStyle}>
+            <p style={statLabelStyle}>Materias Aprobadas</p>
+            <p style={statValueStyle}>12</p>
+          </div>
+        </div>
+
+        <div style={statItemStyle}>
+          <Calendar size={24} style={statIconStyle} />
+          <div style={statContentStyle}>
+            <p style={statLabelStyle}>Próxima Clase</p>
+            <p style={{ ...statValueStyle, fontSize: '16px' }}>Mañana 9:00 AM</p>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -74,50 +74,6 @@ def obtener_usuarios(
             status_code=500, content={"detail": "Error al obtener usuarios"}
         )
 
-@user.get("/users/alls")
-def obtener_usuarios(
-    req: Request,
-    limit: int = Query(20, gt=0, le=100),
-    last_seen_id: Optional[int] = Query(None),
-):
-    try:
-        # Consulta base
-        query = session.query(User).options(joinedload(User.userdetail)).order_by(User.id)
-
-        if last_seen_id is not None:
-            query = query.filter(User.id > last_seen_id)
-
-        usuarios = query.limit(limit).all()
-
-        usuarios_con_detalles = []
-        for usuario in usuarios:
-            if usuario.userdetail:
-                usuario_con_detalle = {
-                    "id": usuario.id,
-                    "username": usuario.username,
-                    "email": usuario.email,
-                    "dni": usuario.userdetail.dni,
-                    "firstname": usuario.userdetail.firstName,
-                    "lastname": usuario.userdetail.lastName,
-                    "type": usuario.userdetail.type,
-                }
-                usuarios_con_detalles.append(usuario_con_detalle)
-
-        next_cursor = (
-            usuarios_con_detalles[-1]["id"] if len(usuarios_con_detalles) == limit else None
-        )
-
-        return JSONResponse(
-            status_code=200,
-            content={"users": usuarios_con_detalles, "next_cursor": next_cursor},
-        )
-
-    except Exception as e:
-        print("Error al obtener usuarios:", e)
-        return JSONResponse(
-            status_code=500, content={"detail": "Error al obtener usuarios"}
-        )
-    
 @user.post("/users/paginated/filtered-async")
 async def get_users_paginated_filtered_async(req: Request, body: InputPaginatedRequest):
     db = Session()

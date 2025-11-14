@@ -27,7 +27,16 @@ function Login() {
       localStorage.setItem("token", dataObject.token ?? "");
       localStorage.setItem("user", JSON.stringify(dataObject.user));
       setMessage("Initiating session...");
-      navigate("/dashboard");
+
+      // Redirigir según el tipo de usuario
+      const user = dataObject.user as { type?: string };
+      const userType = user?.type?.toLowerCase();
+
+      if (userType === "administrador") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } else {
       setMessage(dataObject.message ?? "Unknown error");
     }

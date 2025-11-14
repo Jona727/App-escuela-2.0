@@ -5,7 +5,7 @@ const StudentRoutes = () => {
   const user = userStr ? JSON.parse(userStr) : null;
   const userType = user?.type;
 
-  return userType === "Alumno" ? <Outlet /> : <Navigate to="/dashboard" />;
+  return userType?.toLowerCase() === "alumno" ? <Outlet /> : <Navigate to="/dashboard" />;
 };
 
 export default StudentRoutes;

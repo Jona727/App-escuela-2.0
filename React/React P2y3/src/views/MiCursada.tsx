@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, GraduationCap, Calendar, RefreshCw, Award, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { RefreshCw, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
 interface Curso {
   id: number;
@@ -19,290 +19,6 @@ interface CursadaData {
   materias: Materia[];
 }
 
-const styles = {
-  container: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%)',
-    padding: '32px 16px',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-  },
-  maxWidth: {
-    maxWidth: '1200px',
-    margin: '0 auto'
-  },
-  header: {
-    textAlign: 'center' as const,
-    marginBottom: '32px'
-  },
-  title: {
-    fontSize: '36px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: '8px',
-    margin: '0'
-  },
-  subtitle: {
-    color: '#6b7280',
-    fontSize: '16px',
-    margin: '0'
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '32px'
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: '16px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    padding: '32px'
-  },
-  cursoCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: '16px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    padding: '32px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white'
-  },
-  sectionHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: '24px'
-  },
-  sectionIcon: {
-    marginRight: '12px',
-    color: '#4f46e5'
-  },
-  sectionIconWhite: {
-    marginRight: '12px',
-    color: 'white'
-  },
-  sectionTitle: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    margin: '0'
-  },
-  sectionTitleWhite: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: 'white',
-    margin: '0'
-  },
-  cursoInfo: {
-    display: 'grid',
-    gridTemplateColumns: '1fr auto',
-    gap: '24px',
-    alignItems: 'center'
-  },
-  cursoDetails: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px'
-  },
-  cursoNombre: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    margin: '0 0 8px 0'
-  },
-  cursoAnio: {
-    fontSize: '18px',
-    opacity: 0.9,
-    margin: '0'
-  },
-  badge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '6px 12px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: '500'
-  },
-  badgeActivo: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    color: 'white',
-    border: '1px solid rgba(255, 255, 255, 0.3)'
-  },
-  badgeInactivo: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    color: '#dc2626',
-    border: '1px solid rgba(239, 68, 68, 0.2)'
-  },
-  statsCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: '12px',
-    padding: '20px',
-    textAlign: 'center' as const,
-    minWidth: '120px'
-  },
-  statsNumber: {
-    fontSize: '32px',
-    fontWeight: 'bold',
-    margin: '0 0 4px 0'
-  },
-  statsLabel: {
-    fontSize: '14px',
-    opacity: 0.9,
-    margin: '0'
-  },
-  materiasGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: '20px'
-  },
-  materiaCard: {
-    backgroundColor: '#f9fafb',
-    borderRadius: '12px',
-    padding: '20px',
-    border: '1px solid #e5e7eb',
-    transition: 'all 0.2s',
-    cursor: 'pointer'
-  },
-  materiaCardHover: {
-    backgroundColor: '#ffffff',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    transform: 'translateY(-2px)'
-  },
-  materiaNombre: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1f2937',
-    margin: '0 0 12px 0'
-  },
-  estadoBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '6px 12px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: '500'
-  },
-  estadoCursando: {
-    backgroundColor: '#dbeafe',
-    color: '#1e40af'
-  },
-  estadoAprobado: {
-    backgroundColor: '#dcfce7',
-    color: '#166534'
-  },
-  estadoDesaprobado: {
-    backgroundColor: '#fee2e2',
-    color: '#991b1b'
-  },
-  estadoPendiente: {
-    backgroundColor: '#fef3c7',
-    color: '#92400e'
-  },
-  estadoDefault: {
-    backgroundColor: '#f3f4f6',
-    color: '#374151'
-  },
-  loading: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  loadingContent: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px'
-  },
-  loadingSpinner: {
-    width: '32px',
-    height: '32px',
-    border: '3px solid #e5e7eb',
-    borderTop: '3px solid #4f46e5',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite'
-  },
-  loadingText: {
-    fontSize: '18px',
-    color: '#6b7280'
-  },
-  errorCard: {
-    backgroundColor: '#fef2f2',
-    color: '#991b1b',
-    border: '1px solid #fca5a5',
-    borderRadius: '12px',
-    padding: '20px',
-    textAlign: 'center' as const
-  },
-  errorTitle: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    margin: '0 0 8px 0'
-  },
-  errorMessage: {
-    margin: '0 0 16px 0'
-  },
-  button: {
-    padding: '12px 24px',
-    background: 'linear-gradient(135deg, #4f46e5 0%, #a855f7 100%)',
-    color: 'white',
-    fontWeight: '600',
-    borderRadius: '12px',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '16px',
-    transition: 'all 0.2s',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px'
-  },
-  emptyState: {
-    textAlign: 'center' as const,
-    padding: '40px 20px',
-    color: '#6b7280'
-  },
-  emptyIcon: {
-    width: '64px',
-    height: '64px',
-    margin: '0 auto 16px',
-    color: '#d1d5db'
-  },
-  emptyTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#374151',
-    margin: '0 0 8px 0'
-  },
-  emptyMessage: {
-    margin: '0'
-  }
-};
-
-// CSS animations
-const styleSheet = document.createElement("style");
-styleSheet.innerText = `
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  .materia-card-hover:hover {
-    background-color: #ffffff !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-    transform: translateY(-2px) !important;
-  }
-  
-  @media (max-width: 768px) {
-    .curso-info-responsive {
-      grid-template-columns: 1fr !important;
-      text-align: center;
-    }
-    .materias-grid-responsive {
-      grid-template-columns: 1fr !important;
-    }
-  }
-`;
-document.head.appendChild(styleSheet);
-
 export default function MiCursada() {
   const [cursadaData, setCursadaData] = useState<CursadaData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -317,13 +33,13 @@ export default function MiCursada() {
     try {
       if (!loading) setIsRefreshing(true);
       setError(null);
-      
+
       const token = localStorage.getItem('token');
-      
+
       if (!token) {
         throw new Error('No se encontró token de autenticación');
       }
-      
+
       const response = await fetch('http://localhost:8000/user/mi-cursada', {
         method: 'GET',
         headers: {
@@ -357,187 +73,349 @@ export default function MiCursada() {
   const getEstadoIcon = (estado: string) => {
     switch (estado?.toLowerCase()) {
       case 'cursando':
-        return <Clock size={16} />;
+        return <Clock size={16} style={{ color: '#3b82f6' }} />;
       case 'aprobado':
-        return <CheckCircle size={16} />;
+        return <CheckCircle size={16} style={{ color: '#10b981' }} />;
       case 'desaprobado':
-        return <XCircle size={16} />;
+        return <XCircle size={16} style={{ color: '#ef4444' }} />;
       case 'pendiente':
-        return <AlertCircle size={16} />;
+        return <AlertCircle size={16} style={{ color: '#f59e0b' }} />;
       default:
-        return <BookOpen size={16} />;
+        return null;
     }
   };
 
-  const getEstadoStyle = (estado: string) => {
-    switch (estado?.toLowerCase()) {
-      case 'cursando':
-        return { ...styles.estadoBadge, ...styles.estadoCursando };
-      case 'aprobado':
-        return { ...styles.estadoBadge, ...styles.estadoAprobado };
-      case 'desaprobado':
-        return { ...styles.estadoBadge, ...styles.estadoDesaprobado };
-      case 'pendiente':
-        return { ...styles.estadoBadge, ...styles.estadoPendiente };
-      default:
-        return { ...styles.estadoBadge, ...styles.estadoDefault };
-    }
+  // Estilos minimalistas
+  const containerStyle: React.CSSProperties = {
+    maxWidth: '900px',
+    margin: '0 auto',
+    padding: '60px 24px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    color: '#1f2937',
   };
 
-  const getMateriasStats = (materias: Materia[]) => {
-    const stats = {
-      total: materias.length,
-      aprobadas: materias.filter(m => m.estado?.toLowerCase() === 'aprobado').length,
-      cursando: materias.filter(m => m.estado?.toLowerCase() === 'cursando').length,
-      pendientes: materias.filter(m => m.estado?.toLowerCase() === 'pendiente').length
-    };
-    return stats;
+  const cursoCardStyle: React.CSSProperties = {
+    background: '#f7f4f4ff',
+    borderRadius: '12px',
+    padding: '32px',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+    marginBottom: '64px',
+  };
+
+  const mainTitleStyle: React.CSSProperties = {
+    fontSize: '11px',
+    fontWeight: '600',
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    letterSpacing: '0.15em',
+    marginBottom: '12px',
+  };
+
+  const cursoNombreStyle: React.CSSProperties = {
+    fontSize: '36px',
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: '32px',
+    letterSpacing: '-0.025em',
+    lineHeight: '1.1',
+  };
+
+  const statsLineStyle: React.CSSProperties = {
+    display: 'flex',
+    gap: '0',
+    alignItems: 'center',
+  };
+
+  const statStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    flex: '1',
+  };
+
+  const statLabelStyle: React.CSSProperties = {
+    fontSize: '13px',
+    color: '#6b7280',
+    fontWeight: '500',
+  };
+
+  const statNumberStyle: React.CSSProperties = {
+    fontSize: '28px',
+    fontWeight: '700',
+    color: '#111827',
+    lineHeight: '1',
+  };
+
+  const statDividerStyle: React.CSSProperties = {
+    width: '1px',
+    height: '48px',
+    background: '#e5e7eb',
+    margin: '0 32px',
+  };
+
+  const sectionTitleStyle: React.CSSProperties = {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  };
+
+  const refreshButtonStyle: React.CSSProperties = {
+    background: 'transparent',
+    border: '1px solid #e5e7eb',
+    borderRadius: '6px',
+    padding: '6px 12px',
+    cursor: isRefreshing ? 'not-allowed' : 'pointer',
+    color: '#6b7280',
+    fontSize: '13px',
+    fontWeight: '500',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    transition: 'all 0.15s',
+    fontFamily: 'inherit',
+    opacity: isRefreshing ? 0.5 : 1,
+  };
+
+  const materiasListStyle: React.CSSProperties = {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1px',
+  };
+
+  const materiaItemStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '16px 0',
+    borderBottom: '1px solid #f3f4f6',
+    transition: 'background 0.15s',
+  };
+
+  const materiaNombreStyle: React.CSSProperties = {
+    fontSize: '15px',
+    fontWeight: '500',
+    color: '#111827',
+  };
+
+  const estadoBadgeStyle: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '14px',
+    color: '#6b7280',
+    fontWeight: '400',
+  };
+
+  const loadingStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#6b7280',
+    fontSize: '15px',
+  };
+
+  const errorStyle: React.CSSProperties = {
+    maxWidth: '600px',
+    margin: '80px auto',
+    padding: '32px',
+    textAlign: 'center',
+    color: '#991b1b',
+  };
+
+  const errorTitleStyle: React.CSSProperties = {
+    fontSize: '18px',
+    fontWeight: '600',
+    marginBottom: '8px',
+  };
+
+  const errorMessageStyle: React.CSSProperties = {
+    fontSize: '15px',
+    marginBottom: '24px',
+    color: '#6b7280',
+  };
+
+  const errorButtonStyle: React.CSSProperties = {
+    padding: '10px 20px',
+    background: '#111827',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontFamily: 'inherit',
+  };
+
+  const emptyStyle: React.CSSProperties = {
+    textAlign: 'center',
+    padding: '64px 24px',
+    color: '#9ca3af',
+  };
+
+  const emptyTitleStyle: React.CSSProperties = {
+    fontSize: '16px',
+    fontWeight: '500',
+    marginBottom: '8px',
+    color: '#6b7280',
+  };
+
+  const emptyMessageStyle: React.CSSProperties = {
+    fontSize: '14px',
   };
 
   if (loading) {
     return (
-      <div style={styles.loading}>
-        <div style={styles.loadingContent}>
-          <div style={styles.loadingSpinner}></div>
-          <span style={styles.loadingText}>Cargando tu cursada...</span>
-        </div>
+      <div style={loadingStyle}>
+        <RefreshCw size={20} className="animate-spin" style={{ marginRight: '8px' }} />
+        <span>Cargando...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={styles.container}>
-        <div style={styles.maxWidth}>
-          <div style={styles.errorCard}>
-            <h2 style={styles.errorTitle}>Error al cargar la información</h2>
-            <p style={styles.errorMessage}>{error}</p>
-            <button 
-              onClick={fetchMiCursada}
-              style={styles.button}
-            >
-              <RefreshCw size={16} />
-              Reintentar
-            </button>
-          </div>
-        </div>
+      <div style={errorStyle}>
+        <h2 style={errorTitleStyle}>Error</h2>
+        <p style={errorMessageStyle}>{error}</p>
+        <button
+          onClick={fetchMiCursada}
+          style={errorButtonStyle}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#000000'}
+          onMouseLeave={(e) => e.currentTarget.style.background = '#111827'}
+        >
+          <RefreshCw size={14} />
+          Reintentar
+        </button>
       </div>
     );
   }
 
   if (!cursadaData) {
     return (
-      <div style={styles.container}>
-        <div style={styles.maxWidth}>
-          <div style={styles.card}>
-            <div style={styles.emptyState}>
-              <GraduationCap style={styles.emptyIcon} />
-              <h3 style={styles.emptyTitle}>Sin información de cursada</h3>
-              <p style={styles.emptyMessage}>
-                No se encontró información de cursada para tu usuario.
-              </p>
-            </div>
-          </div>
+      <div style={containerStyle}>
+        <div style={emptyStyle}>
+          <h3 style={emptyTitleStyle}>Sin información de cursada</h3>
+          <p style={emptyMessageStyle}>
+            No se encontró información de cursada para tu usuario.
+          </p>
         </div>
       </div>
     );
   }
 
   const { curso, materias } = cursadaData;
-  const stats = getMateriasStats(materias || []);
+  const totalMaterias = materias?.length || 0;
+  const aprobadas = materias?.filter(m => m.estado?.toLowerCase() === 'aprobado').length || 0;
 
   return (
-    <div style={styles.container}>
-      <div style={styles.maxWidth}>
-        {/* Header */}
-        <div style={styles.header}>
-          <h1 style={styles.title}>Mi Cursada</h1>
-          <p style={styles.subtitle}>Información de tu curso y materias asignadas</p>
-        </div>
+    <div style={containerStyle}>
+      {/* Header del curso */}
+      <div style={cursoCardStyle}>
+        <h2 style={mainTitleStyle}>MI CURSO</h2>
+        <h1 style={cursoNombreStyle}>{curso.nombre}</h1>
 
-        <div style={styles.grid}>
-          {/* Información del Curso */}
-          <div style={styles.cursoCard}>
-            <div style={styles.sectionHeader}>
-              <GraduationCap size={24} style={styles.sectionIconWhite} />
-              <h2 style={styles.sectionTitleWhite}>Mi Curso</h2>
-            </div>
-            
-            <div style={styles.cursoInfo} className="curso-info-responsive">
-              <div style={styles.cursoDetails}>
-                <h3 style={styles.cursoNombre}>{curso.nombre}</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                  <Calendar size={16} />
-                  <span style={styles.cursoAnio}>Año Escolar: {curso.anio_escolar}</span>
-                </div>
-
-              </div>
-              
-              <div style={styles.statsCard}>
-                <p style={styles.statsNumber}>{stats.total}</p>
-                <p style={styles.statsLabel}>Materias Totales</p>
-              </div>
-            </div>
+        <div style={statsLineStyle}>
+          <div style={statStyle}>
+            <span style={statLabelStyle}>Materias Totales</span>
+            <span style={statNumberStyle}>{totalMaterias}</span>
           </div>
 
-          {/* Materias */}
-          <div style={styles.card}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '24px'
-            }}>
-              <div style={styles.sectionHeader}>
-                <BookOpen size={24} style={styles.sectionIcon} />
-                <h3 style={styles.sectionTitle}>Mis Materias</h3>
-              </div>
-              
-              <button
-                onClick={fetchMiCursada}
-                disabled={isRefreshing}
-                style={{
-                  ...styles.button,
-                  padding: '8px 16px',
-                  fontSize: '14px',
-                  opacity: isRefreshing ? 0.6 : 1
-                }}
-              >
-                <RefreshCw size={14} style={{
-                  animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
-                }} />
-                Actualizar
-              </button>
-            </div>
-            
-            {materias && materias.length > 0 ? (
-              <div style={styles.materiasGrid} className="materias-grid-responsive">
-                {materias.map((materia) => (
-                  <div 
-                    key={materia.id} 
-                    style={styles.materiaCard}
-                    className="materia-card-hover"
-                  >
-                    <h4 style={styles.materiaNombre}>{materia.nombre}</h4>
-                    <div style={getEstadoStyle(materia.estado)}>
-                      {getEstadoIcon(materia.estado)}
-                      {materia.estado}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={styles.emptyState}>
-                <BookOpen style={styles.emptyIcon} />
-                <h4 style={styles.emptyTitle}>No hay materias asignadas</h4>
-                <p style={styles.emptyMessage}>
-                  Contacta con administración para que asignen materias a tu curso.
-                </p>
-              </div>
-            )}
+          <div style={statDividerStyle}></div>
+
+          <div style={statStyle}>
+            <span style={statLabelStyle}>Materias Aprobadas</span>
+            <span style={statNumberStyle}>{aprobadas}</span>
+          </div>
+
+          <div style={statDividerStyle}></div>
+
+          <div style={statStyle}>
+            <span style={statLabelStyle}>Año Escolar</span>
+            <span style={statNumberStyle}>{curso.anio_escolar}</span>
           </div>
         </div>
       </div>
+
+      {/* Lista de materias */}
+      <div>
+        <div style={sectionTitleStyle}>
+          <span>Mis Materias</span>
+          <button
+            onClick={fetchMiCursada}
+            disabled={isRefreshing}
+            style={refreshButtonStyle}
+            onMouseEnter={(e) => {
+              if (!isRefreshing) {
+                e.currentTarget.style.background = '#f9fafb';
+                e.currentTarget.style.borderColor = '#d1d5db';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isRefreshing) {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+              }
+            }}
+          >
+            <RefreshCw size={14} style={{
+              animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
+            }} />
+            Actualizar
+          </button>
+        </div>
+
+        {materias && materias.length > 0 ? (
+          <ul style={materiasListStyle}>
+            {materias.map((materia) => (
+              <li
+                key={materia.id}
+                style={materiaItemStyle}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#fafafa';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                <span style={materiaNombreStyle}>{materia.nombre}</span>
+                <div style={estadoBadgeStyle}>
+                  {getEstadoIcon(materia.estado)}
+                  <span>{materia.estado}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div style={emptyStyle}>
+            <p style={emptyTitleStyle}>No hay materias asignadas</p>
+            <p style={emptyMessageStyle}>
+              Contacta con administración para que asignen materias a tu curso.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* CSS para animación */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }
