@@ -41,6 +41,13 @@ const Pagos = () => {
   const [monto, setMonto] = useState("");
   const [mesPago, setMesPago] = useState("");
 
+  // Estados para búsqueda de alumno
+  const [dniBusqueda, setDniBusqueda] = useState("");
+  const [alumnoEncontrado, setAlumnoEncontrado] = useState<AlumnoPagos | null>(null);
+
+  // Estado para manejar el colapso de meses pendientes
+  const [mostrarMesesPendientes, setMostrarMesesPendientes] = useState(false);
+
   // Estados para Infinite Scroll
   const [opcionesUsuarios, setOpcionesUsuarios] = useState<{ value: number; label: string }[]>([]);
   const [nextCursor, setNextCursor] = useState<number | null>(null);
@@ -102,36 +109,77 @@ const Pagos = () => {
     return meses;
   };
 
-  // Función para agrupar pagos por alumno y calcular estado
-  const agruparPagosPorAlumno = (): AlumnoPagos[] => {
-    const grupos: { [key: string]: Pago[] } = {};
+  // Función para buscar alumno por DNI en los usuarios cargados
+  const buscarAlumnoPorDNI = async () => {
+    if (!dniBusqueda.trim()) {
+      alert("Por favor ingresa un DNI");
+      return;
+    }
 
-    // Agrupar pagos por alumno
-    pagos.forEach((pago) => {
-      if (!grupos[pago.usuario]) {
-        grupos[pago.usuario] = [];
+    try {
+      // Buscar usuario por DNI
+      const res = await fetch("http://localhost:8000/users/paginated/filtered-async", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          limit: 1,
+          dni: parseInt(dniBusqueda),
+        }),
+      });
+
+      if (!res.ok) {
+        alert("Error al buscar alumno");
+        return;
       }
-      grupos[pago.usuario].push(pago);
-    });
 
-    const mesesEsperados = generarMesesDelAnio();
+      const data = await res.json();
 
-    // Crear array de AlumnoPagos con información de estado
-    return Object.entries(grupos).map(([nombreAlumno, pagosList]) => {
-      const mesesPagados = pagosList.map(p => p.mes_afectado);
+      if (!data.users || data.users.length === 0) {
+        alert("No se encontró ningún alumno con ese DNI");
+        setAlumnoEncontrado(null);
+        return;
+      }
+
+      const usuario = data.users[0];
+      const nombreCompleto = `${usuario.firstname} ${usuario.lastname}`;
+
+      // Filtrar pagos de este alumno
+      const pagosDeAlumno = pagos.filter(p => p.usuario === nombreCompleto);
+
+      if (pagosDeAlumno.length === 0) {
+        alert("Este alumno no tiene pagos registrados");
+        setAlumnoEncontrado(null);
+        return;
+      }
+
+      const mesesEsperados = generarMesesDelAnio();
+      const mesesPagados = pagosDeAlumno.map(p => p.mes_afectado);
       const mesesDebe = mesesEsperados.filter(mes => !mesesPagados.includes(mes));
-      const totalPagado = pagosList.reduce((acc, p) => acc + p.amount, 0);
+      const totalPagado = pagosDeAlumno.reduce((acc, p) => acc + p.amount, 0);
       const alDia = mesesDebe.length === 0;
 
-      return {
-        nombreAlumno,
-        pagos: pagosList.sort((a, b) => a.mes_afectado.localeCompare(b.mes_afectado)),
+      setAlumnoEncontrado({
+        nombreAlumno: nombreCompleto,
+        pagos: pagosDeAlumno.sort((a, b) => a.mes_afectado.localeCompare(b.mes_afectado)),
         totalPagado,
         mesesPagados,
         mesesDebe,
         alDia
-      };
-    }).sort((a, b) => a.nombreAlumno.localeCompare(b.nombreAlumno));
+      });
+      setMostrarMesesPendientes(false);
+    } catch (error) {
+      console.error("Error al buscar alumno:", error);
+      alert("Error al buscar alumno");
+    }
+  };
+
+  const limpiarBusqueda = () => {
+    setDniBusqueda("");
+    setAlumnoEncontrado(null);
+    setMostrarMesesPendientes(false);
   };
 
   useEffect(() => {
@@ -471,6 +519,47 @@ const Pagos = () => {
     color: '#991b1b',
   };
 
+  const searchCardStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '12px',
+    padding: isMobile ? '20px' : '24px',
+    marginBottom: '24px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    border: '1px solid #e5e7eb',
+  };
+
+  const searchTitleStyle: React.CSSProperties = {
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: '16px',
+  };
+
+  const searchFormStyle: React.CSSProperties = {
+    display: 'flex',
+    gap: '12px',
+    flexDirection: isMobile ? 'column' : 'row',
+    alignItems: isMobile ? 'stretch' : 'center',
+  };
+
+  const collapseButtonStyle: React.CSSProperties = {
+    padding: '8px 16px',
+    borderRadius: '8px',
+    border: '1px solid #fca5a5',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    background: 'white',
+    color: '#dc2626',
+    fontFamily: 'inherit',
+    transition: 'all 0.2s',
+    marginBottom: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    width: isMobile ? '100%' : 'auto',
+  };
+
   return (
     <div style={containerStyle}>
       {/* Header */}
@@ -570,82 +659,139 @@ const Pagos = () => {
         </button>
       </div>
 
-      {/* Grid de pagos por alumno */}
-      <div>
-        {pagos.length === 0 ? (
-          <div style={tableContainerStyle}>
-            <div style={emptyStateStyle}>
-               No hay pagos registrados todavía
+      {/* Formulario de búsqueda por DNI */}
+      <div style={searchCardStyle}>
+        <h2 style={searchTitleStyle}>
+          🔍 Buscar Alumno por DNI
+        </h2>
+        <div style={searchFormStyle}>
+          <input
+            type="number"
+            placeholder="Ingrese DNI del alumno"
+            value={dniBusqueda}
+            onChange={(e) => setDniBusqueda(e.target.value)}
+            style={{ ...inputStyle, flex: 1 }}
+            onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
+            onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+          />
+          <button
+            onClick={buscarAlumnoPorDNI}
+            style={{
+              ...primaryButtonStyle,
+              width: isMobile ? '100%' : 'auto',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
+          >
+            🔍 Buscar
+          </button>
+          {alumnoEncontrado && (
+            <button
+              onClick={limpiarBusqueda}
+              style={{
+                padding: isMobile ? '12px 24px' : '12px 32px',
+                borderRadius: '8px',
+                border: '1px solid #d1d5db',
+                fontSize: isMobile ? '14px' : '15px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                background: 'white',
+                color: '#6b7280',
+                fontFamily: 'inherit',
+                transition: 'all 0.2s',
+                width: isMobile ? '100%' : 'auto',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+            >
+              ✖ Limpiar
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Resultado de búsqueda */}
+      {alumnoEncontrado ? (
+        <div style={alumnoCardStyle}>
+          {/* Header del alumno */}
+          <div style={alumnoHeaderStyle}>
+            <div>
+              <h3 style={alumnoNombreStyle}>{alumnoEncontrado.nombreAlumno}</h3>
+              <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
+                Total pagado: <span style={{ fontWeight: '600', color: '#10b981' }}>
+                  ${alumnoEncontrado.totalPagado.toLocaleString('es-AR')}
+                </span>
+              </p>
+            </div>
+            <span style={estadoBadgeStyle(alumnoEncontrado.alDia)}>
+              {alumnoEncontrado.alDia ? '✓ Al día' : '⚠ Debe meses'}
+            </span>
+          </div>
+
+          {/* Grid de pagos realizados */}
+          <div>
+            <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
+              📋 Pagos Realizados ({alumnoEncontrado.pagos.length})
+            </h4>
+            <div style={pagosGridStyle}>
+              {alumnoEncontrado.pagos.map((pago) => (
+                <div key={pago.id} style={pagoItemStyle}>
+                  <div style={mesLabelStyle}>
+                    {new Date(pago.mes_afectado + '-01').toLocaleDateString('es-AR', {
+                      month: 'long',
+                      year: 'numeric'
+                    })}
+                  </div>
+                  <div style={montoStyle}>
+                    ${pago.amount.toLocaleString('es-AR')}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+                    {pago.carrera}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#9ca3af' }}>
+                    {new Date(pago.fecha_pago).toLocaleDateString('es-AR')}
+                  </div>
+                  <button
+                    onClick={() => eliminarPago(pago.id)}
+                    style={{
+                      ...deleteButtonStyle,
+                      width: '100%',
+                      marginTop: '8px',
+                      fontSize: '11px',
+                      padding: '4px 8px'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
-        ) : (
-          agruparPagosPorAlumno().map((alumnoData) => (
-            <div key={alumnoData.nombreAlumno} style={alumnoCardStyle}>
-              {/* Header del alumno */}
-              <div style={alumnoHeaderStyle}>
-                <div>
-                  <h3 style={alumnoNombreStyle}>{alumnoData.nombreAlumno}</h3>
-                  <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
-                    Total pagado: <span style={{ fontWeight: '600', color: '#10b981' }}>
-                      ${alumnoData.totalPagado.toLocaleString('es-AR')}
-                    </span>
-                  </p>
-                </div>
-                <span style={estadoBadgeStyle(alumnoData.alDia)}>
-                  {alumnoData.alDia ? '✓ Al día' : '⚠ Debe meses'}
+
+          {/* Meses que debe - Sección colapsable */}
+          {alumnoEncontrado.mesesDebe.length > 0 && (
+            <div style={{ marginTop: '16px' }}>
+              <button
+                onClick={() => setMostrarMesesPendientes(!mostrarMesesPendientes)}
+                style={collapseButtonStyle}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#fef2f2'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+              >
+                <span>{mostrarMesesPendientes ? '▼' : '▶'}</span>
+                <span>
+                  {mostrarMesesPendientes ? 'Ocultar' : 'Ver'} Meses Pendientes de Pago ({alumnoEncontrado.mesesDebe.length})
                 </span>
-              </div>
+              </button>
 
-              {/* Grid de pagos realizados */}
-              <div>
-                <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
-                  Pagos Realizados ({alumnoData.pagos.length})
-                </h4>
-                <div style={pagosGridStyle}>
-                  {alumnoData.pagos.map((pago) => (
-                    <div key={pago.id} style={pagoItemStyle}>
-                      <div style={mesLabelStyle}>
-                        {new Date(pago.mes_afectado + '-01').toLocaleDateString('es-AR', {
-                          month: 'long',
-                          year: 'numeric'
-                        })}
-                      </div>
-                      <div style={montoStyle}>
-                        ${pago.amount.toLocaleString('es-AR')}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
-                        {pago.carrera}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#9ca3af' }}>
-                        {new Date(pago.fecha_pago).toLocaleDateString('es-AR')}
-                      </div>
-                      <button
-                        onClick={() => eliminarPago(pago.id)}
-                        style={{
-                          ...deleteButtonStyle,
-                          width: '100%',
-                          marginTop: '8px',
-                          fontSize: '11px',
-                          padding: '4px 8px'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Meses que debe */}
-              {alumnoData.mesesDebe.length > 0 && (
+              {mostrarMesesPendientes && (
                 <div style={mesesDebeStyle}>
                   <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#991b1b', marginBottom: '4px' }}>
-                    ⚠ Meses pendientes de pago ({alumnoData.mesesDebe.length})
+                    ⚠ Meses pendientes de pago
                   </h4>
                   <div style={mesesDebeListStyle}>
-                    {alumnoData.mesesDebe.map((mes) => (
+                    {alumnoEncontrado.mesesDebe.map((mes) => (
                       <span key={mes} style={mesDebeBadgeStyle}>
                         {new Date(mes + '-01').toLocaleDateString('es-AR', {
                           month: 'long',
@@ -657,9 +803,15 @@ const Pagos = () => {
                 </div>
               )}
             </div>
-          ))
-        )}
-      </div>
+          )}
+        </div>
+      ) : (
+        <div style={tableContainerStyle}>
+          <div style={emptyStateStyle}>
+            🔍 Ingrese un DNI para buscar el historial de pagos de un alumno
+          </div>
+        </div>
+      )}
     </div>
   );
 };
