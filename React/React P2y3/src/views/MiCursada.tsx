@@ -24,6 +24,7 @@ export default function MiCursada() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [mostrarModalMaterias, setMostrarModalMaterias] = useState(false);
 
   useEffect(() => {
     fetchMiCursada();
@@ -289,6 +290,76 @@ export default function MiCursada() {
     fontSize: '14px',
   };
 
+  const misMateriasLinkStyle: React.CSSProperties = {
+    marginTop: '24px',
+    display: 'inline-block',
+    fontSize: '15px',
+    fontWeight: '500',
+    color: '#2563eb',
+    textDecoration: 'none',
+    cursor: 'pointer',
+    borderBottom: '2px solid transparent',
+    transition: 'border-color 0.2s',
+  };
+
+  const modalOverlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  };
+
+  const modalContentStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '16px',
+    maxWidth: '800px',
+    width: '100%',
+    maxHeight: '85vh',
+    overflowY: 'auto',
+    position: 'relative',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  };
+
+  const modalHeaderStyle: React.CSSProperties = {
+    padding: '24px',
+    borderBottom: '2px solid #e5e7eb',
+    position: 'sticky',
+    top: 0,
+    background: 'white',
+    zIndex: 10,
+    borderRadius: '16px 16px 0 0',
+  };
+
+  const modalBodyStyle: React.CSSProperties = {
+    padding: '24px',
+  };
+
+  const closeButtonStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    border: 'none',
+    fontSize: '20px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    background: '#fee2e2',
+    color: '#dc2626',
+    fontFamily: 'inherit',
+    transition: 'all 0.2s',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  };
+
   if (loading) {
     return (
       <div style={backgroundContainerStyle}>
@@ -337,7 +408,6 @@ export default function MiCursada() {
 
   const { curso, materias } = cursadaData;
   const totalMaterias = materias?.length || 0;
-  const aprobadas = materias?.filter(m => m.estado?.toLowerCase() === 'aprobado').length || 0;
 
   return (
     <div style={backgroundContainerStyle}>
@@ -356,77 +426,109 @@ export default function MiCursada() {
             <div style={statDividerStyle}></div>
 
             <div style={statStyle}>
-              <span style={statLabelStyle}>Materias Aprobadas</span>
-              <span style={statNumberStyle}>{aprobadas}</span>
-            </div>
-
-            <div style={statDividerStyle}></div>
-
-            <div style={statStyle}>
               <span style={statLabelStyle}>Año Escolar</span>
               <span style={statNumberStyle}>{curso.anio_escolar}</span>
             </div>
           </div>
-        </div>
 
-        {/* Lista de materias */}
-        <div style={materiasContainerStyle}>
-          <div style={sectionTitleStyle}>
-            <span>Mis Materias</span>
-            <button
-              onClick={fetchMiCursada}
-              disabled={isRefreshing}
-              style={refreshButtonStyle}
-              onMouseEnter={(e) => {
-                if (!isRefreshing) {
-                  e.currentTarget.style.background = '#f9fafb';
-                  e.currentTarget.style.borderColor = '#d1d5db';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isRefreshing) {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = '#e5e7eb';
-                }
-              }}
+          {/* Link para ver mis materias */}
+          <div style={{ marginTop: '32px' }}>
+            <a
+              onClick={() => setMostrarModalMaterias(true)}
+              style={misMateriasLinkStyle}
+              onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#2563eb'}
+              onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
             >
-              <RefreshCw size={14} style={{
-                animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
-              }} />
-              Actualizar
-            </button>
+              📚 Ver Mis Materias
+            </a>
           </div>
-
-          {materias && materias.length > 0 ? (
-            <ul style={materiasListStyle}>
-              {materias.map((materia) => (
-                <li
-                  key={materia.id}
-                  style={materiaItemStyle}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#fafafa';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  <span style={materiaNombreStyle}>{materia.nombre}</span>
-                  <div style={estadoBadgeStyle}>
-                    {getEstadoIcon(materia.estado)}
-                    <span>{materia.estado}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div style={emptyStyle}>
-              <p style={emptyTitleStyle}>No hay materias asignadas</p>
-              <p style={emptyMessageStyle}>
-                Contacta con administración para que asignen materias a tu curso.
-              </p>
-            </div>
-          )}
         </div>
+
+        {/* Modal de materias */}
+        {mostrarModalMaterias && (
+          <div style={modalOverlayStyle} onClick={() => setMostrarModalMaterias(false)}>
+            <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+              {/* Header del modal */}
+              <div style={modalHeaderStyle}>
+                <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
+                  📚 Mis Materias
+                </h2>
+                <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                  {curso.nombre} - Año Escolar {curso.anio_escolar}
+                </p>
+                <button
+                  onClick={() => setMostrarModalMaterias(false)}
+                  style={closeButtonStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Body del modal */}
+              <div style={modalBodyStyle}>
+                <div style={{ ...materiasContainerStyle, boxShadow: 'none', border: 'none', padding: 0 }}>
+                  <div style={sectionTitleStyle}>
+                    <span>Mis Materias</span>
+                    <button
+                      onClick={fetchMiCursada}
+                      disabled={isRefreshing}
+                      style={refreshButtonStyle}
+                      onMouseEnter={(e) => {
+                        if (!isRefreshing) {
+                          e.currentTarget.style.background = '#f9fafb';
+                          e.currentTarget.style.borderColor = '#d1d5db';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isRefreshing) {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.borderColor = '#e5e7eb';
+                        }
+                      }}
+                    >
+                      <RefreshCw size={14} style={{
+                        animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
+                      }} />
+                      Actualizar
+                    </button>
+                  </div>
+
+                  {materias && materias.length > 0 ? (
+                    <ul style={materiasListStyle}>
+                      {materias.map((materia) => (
+                        <li
+                          key={materia.id}
+                          style={materiaItemStyle}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#fafafa';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          <span style={materiaNombreStyle}>{materia.nombre}</span>
+                          <div style={estadoBadgeStyle}>
+                            {getEstadoIcon(materia.estado)}
+                            <span>{materia.estado}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div style={emptyStyle}>
+                      <p style={emptyTitleStyle}>No hay materias asignadas</p>
+                      <p style={emptyMessageStyle}>
+                        Contacta con administración para que asignen materias a tu curso.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* CSS para animación */}
         <style>{`
