@@ -44,6 +44,7 @@ const Pagos = () => {
   // Estados para búsqueda de alumno
   const [dniBusqueda, setDniBusqueda] = useState("");
   const [alumnoEncontrado, setAlumnoEncontrado] = useState<AlumnoPagos | null>(null);
+  const [mostrarModalAlumno, setMostrarModalAlumno] = useState(false);
 
   // Estado para manejar el colapso de meses pendientes
   const [mostrarMesesPendientes, setMostrarMesesPendientes] = useState(false);
@@ -170,6 +171,7 @@ const Pagos = () => {
         alDia
       });
       setMostrarMesesPendientes(false);
+      setMostrarModalAlumno(true);
     } catch (error) {
       console.error("Error al buscar alumno:", error);
       alert("Error al buscar alumno");
@@ -180,6 +182,11 @@ const Pagos = () => {
     setDniBusqueda("");
     setAlumnoEncontrado(null);
     setMostrarMesesPendientes(false);
+    setMostrarModalAlumno(false);
+  };
+
+  const cerrarModal = () => {
+    setMostrarModalAlumno(false);
   };
 
   useEffect(() => {
@@ -560,6 +567,64 @@ const Pagos = () => {
     width: isMobile ? '100%' : 'auto',
   };
 
+  const modalOverlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: isMobile ? '20px' : '40px',
+  };
+
+  const modalContentStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '16px',
+    maxWidth: '900px',
+    width: '100%',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    position: 'relative',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  };
+
+  const modalHeaderStyle: React.CSSProperties = {
+    padding: isMobile ? '20px' : '24px',
+    borderBottom: '2px solid #e5e7eb',
+    position: 'sticky',
+    top: 0,
+    background: 'white',
+    zIndex: 10,
+    borderRadius: '16px 16px 0 0',
+  };
+
+  const modalBodyStyle: React.CSSProperties = {
+    padding: isMobile ? '20px' : '24px',
+  };
+
+  const closeButtonStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: isMobile ? '16px' : '20px',
+    right: isMobile ? '16px' : '20px',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    border: 'none',
+    fontSize: '20px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    background: '#fee2e2',
+    color: '#dc2626',
+    fontFamily: 'inherit',
+    transition: 'all 0.2s',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  };
+
   return (
     <div style={containerStyle}>
       {/* Header */}
@@ -710,105 +775,124 @@ const Pagos = () => {
         </div>
       </div>
 
-      {/* Resultado de búsqueda */}
-      {alumnoEncontrado ? (
-        <div style={alumnoCardStyle}>
-          {/* Header del alumno */}
-          <div style={alumnoHeaderStyle}>
-            <div>
-              <h3 style={alumnoNombreStyle}>{alumnoEncontrado.nombreAlumno}</h3>
-              <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
-                Total pagado: <span style={{ fontWeight: '600', color: '#10b981' }}>
-                  ${alumnoEncontrado.totalPagado.toLocaleString('es-AR')}
-                </span>
+      {/* Modal con información del alumno */}
+      {mostrarModalAlumno && alumnoEncontrado && (
+        <div style={modalOverlayStyle} onClick={cerrarModal}>
+          <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+            {/* Header del modal */}
+            <div style={modalHeaderStyle}>
+              <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
+                📊 Historial de Pagos
+              </h2>
+              <p style={{ fontSize: isMobile ? '14px' : '16px', color: '#6b7280' }}>
+                Detalles completos del alumno
               </p>
-            </div>
-            <span style={estadoBadgeStyle(alumnoEncontrado.alDia)}>
-              {alumnoEncontrado.alDia ? '✓ Al día' : '⚠ Debe meses'}
-            </span>
-          </div>
-
-          {/* Grid de pagos realizados */}
-          <div>
-            <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
-              📋 Pagos Realizados ({alumnoEncontrado.pagos.length})
-            </h4>
-            <div style={pagosGridStyle}>
-              {alumnoEncontrado.pagos.map((pago) => (
-                <div key={pago.id} style={pagoItemStyle}>
-                  <div style={mesLabelStyle}>
-                    {new Date(pago.mes_afectado + '-01').toLocaleDateString('es-AR', {
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </div>
-                  <div style={montoStyle}>
-                    ${pago.amount.toLocaleString('es-AR')}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
-                    {pago.carrera}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af' }}>
-                    {new Date(pago.fecha_pago).toLocaleDateString('es-AR')}
-                  </div>
-                  <button
-                    onClick={() => eliminarPago(pago.id)}
-                    style={{
-                      ...deleteButtonStyle,
-                      width: '100%',
-                      marginTop: '8px',
-                      fontSize: '11px',
-                      padding: '4px 8px'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Meses que debe - Sección colapsable */}
-          {alumnoEncontrado.mesesDebe.length > 0 && (
-            <div style={{ marginTop: '16px' }}>
               <button
-                onClick={() => setMostrarMesesPendientes(!mostrarMesesPendientes)}
-                style={collapseButtonStyle}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#fef2f2'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                onClick={cerrarModal}
+                style={closeButtonStyle}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
               >
-                <span>{mostrarMesesPendientes ? '▼' : '▶'}</span>
-                <span>
-                  {mostrarMesesPendientes ? 'Ocultar' : 'Ver'} Meses Pendientes de Pago ({alumnoEncontrado.mesesDebe.length})
-                </span>
+                ✕
               </button>
+            </div>
 
-              {mostrarMesesPendientes && (
-                <div style={mesesDebeStyle}>
-                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#991b1b', marginBottom: '4px' }}>
-                    ⚠ Meses pendientes de pago
-                  </h4>
-                  <div style={mesesDebeListStyle}>
-                    {alumnoEncontrado.mesesDebe.map((mes) => (
-                      <span key={mes} style={mesDebeBadgeStyle}>
-                        {new Date(mes + '-01').toLocaleDateString('es-AR', {
-                          month: 'long',
-                          year: 'numeric'
-                        })}
+            {/* Body del modal */}
+            <div style={modalBodyStyle}>
+              {/* Información del alumno */}
+              <div style={{ ...alumnoCardStyle, boxShadow: 'none', border: 'none', padding: 0, marginBottom: '24px' }}>
+                <div style={alumnoHeaderStyle}>
+                  <div>
+                    <h3 style={alumnoNombreStyle}>{alumnoEncontrado.nombreAlumno}</h3>
+                    <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
+                      Total pagado: <span style={{ fontWeight: '600', color: '#10b981' }}>
+                        ${alumnoEncontrado.totalPagado.toLocaleString('es-AR')}
                       </span>
+                    </p>
+                  </div>
+                  <span style={estadoBadgeStyle(alumnoEncontrado.alDia)}>
+                    {alumnoEncontrado.alDia ? '✓ Al día' : '⚠ Debe meses'}
+                  </span>
+                </div>
+
+                {/* Grid de pagos realizados */}
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
+                    📋 Pagos Realizados ({alumnoEncontrado.pagos.length})
+                  </h4>
+                  <div style={pagosGridStyle}>
+                    {alumnoEncontrado.pagos.map((pago) => (
+                      <div key={pago.id} style={pagoItemStyle}>
+                        <div style={mesLabelStyle}>
+                          {new Date(pago.mes_afectado + '-01').toLocaleDateString('es-AR', {
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </div>
+                        <div style={montoStyle}>
+                          ${pago.amount.toLocaleString('es-AR')}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+                          {pago.carrera}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#9ca3af' }}>
+                          {new Date(pago.fecha_pago).toLocaleDateString('es-AR')}
+                        </div>
+                        <button
+                          onClick={() => eliminarPago(pago.id)}
+                          style={{
+                            ...deleteButtonStyle,
+                            width: '100%',
+                            marginTop: '8px',
+                            fontSize: '11px',
+                            padding: '4px 8px'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
-              )}
+
+                {/* Meses que debe - Sección colapsable */}
+                {alumnoEncontrado.mesesDebe.length > 0 && (
+                  <div style={{ marginTop: '16px' }}>
+                    <button
+                      onClick={() => setMostrarMesesPendientes(!mostrarMesesPendientes)}
+                      style={collapseButtonStyle}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#fef2f2'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                    >
+                      <span>{mostrarMesesPendientes ? '▼' : '▶'}</span>
+                      <span>
+                        {mostrarMesesPendientes ? 'Ocultar' : 'Ver'} Meses Pendientes de Pago ({alumnoEncontrado.mesesDebe.length})
+                      </span>
+                    </button>
+
+                    {mostrarMesesPendientes && (
+                      <div style={mesesDebeStyle}>
+                        <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#991b1b', marginBottom: '4px' }}>
+                          ⚠ Meses pendientes de pago
+                        </h4>
+                        <div style={mesesDebeListStyle}>
+                          {alumnoEncontrado.mesesDebe.map((mes) => (
+                            <span key={mes} style={mesDebeBadgeStyle}>
+                              {new Date(mes + '-01').toLocaleDateString('es-AR', {
+                                month: 'long',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      ) : (
-        <div style={tableContainerStyle}>
-          <div style={emptyStateStyle}>
-            🔍 Ingrese un DNI para buscar el historial de pagos de un alumno
           </div>
         </div>
       )}
