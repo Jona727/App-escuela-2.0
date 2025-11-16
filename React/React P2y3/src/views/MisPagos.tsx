@@ -15,18 +15,23 @@ const MisPagos = () => {
 
   const mesActual = new Date().toISOString().slice(0, 7);
 
-  const totalMes = pagos
-    .filter(p => p.mes_afectado === mesActual)
-    .reduce((acc, p) => acc + (p.amount || 0), 0);
+  // Función para generar meses esperados del año actual hasta el mes actual
+  const generarMesesDelAnio = () => {
+    const meses: string[] = [];
+    const añoActual = new Date().getFullYear();
+    const mesActualNumero = new Date().getMonth() + 1; // 1-12
 
-  const totalAnual = pagos
-    .filter(p => p.mes_afectado?.startsWith(mesActual.slice(0, 4)))
-    .reduce((acc, p) => acc + (p.amount || 0), 0);
+    for (let mes = 1; mes <= mesActualNumero; mes++) {
+      const mesStr = mes.toString().padStart(2, '0');
+      meses.push(`${añoActual}-${mesStr}`);
+    }
+    return meses;
+  };
 
-  const totalGeneral = pagos.reduce(
-    (acc, p) => acc + (p.amount || 0),
-    0
-  );
+  const mesesEsperados = generarMesesDelAnio();
+  const mesesPagados = pagos.map(p => p.mes_afectado);
+  const mesesPendientes = mesesEsperados.filter(mes => !mesesPagados.includes(mes));
+  const alDia = mesesPendientes.length === 0;
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -102,34 +107,40 @@ const MisPagos = () => {
     color: '#6b7280',
   };
 
-  const cardsGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-    gap: '20px',
-    marginBottom: '32px',
-  };
-
-  const statCardStyle: React.CSSProperties = {
+  const estadoCardStyle: React.CSSProperties = {
     background: 'white',
     borderRadius: '12px',
-    padding: isMobile ? '20px' : '24px',
+    padding: isMobile ? '32px 24px' : '40px 32px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-    border: '1px solid #e5e7eb',
+    border: alDia ? '2px solid #10b981' : '2px solid #ef4444',
+    marginBottom: '32px',
+    textAlign: 'center',
+    maxWidth: '600px',
+    margin: '0 auto 32px auto',
   };
 
-  const statLabelStyle: React.CSSProperties = {
-    fontSize: isMobile ? '13px' : '14px',
-    color: '#6b7280',
-    fontWeight: '500',
+  const estadoIconStyle: React.CSSProperties = {
+    fontSize: isMobile ? '48px' : '64px',
+    marginBottom: '16px',
+  };
+
+  const estadoTitleStyle: React.CSSProperties = {
+    fontSize: isMobile ? '24px' : '28px',
+    fontWeight: '700',
+    color: alDia ? '#10b981' : '#ef4444',
     marginBottom: '8px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
   };
 
-  const statValueBaseStyle: React.CSSProperties = {
-    fontSize: isMobile ? '28px' : '32px',
+  const estadoMessageStyle: React.CSSProperties = {
+    fontSize: isMobile ? '14px' : '16px',
+    color: '#6b7280',
+    marginBottom: mesesPendientes.length > 0 ? '16px' : '0',
+  };
+
+  const mesesPendientesStyle: React.CSSProperties = {
+    fontSize: isMobile ? '16px' : '18px',
     fontWeight: '600',
+    color: '#374151',
   };
 
   const tableContainerStyle: React.CSSProperties = {
@@ -180,34 +191,25 @@ const MisPagos = () => {
         <p style={headerSubtitleStyle}>Visualiza tu historial de pagos y estadísticas</p>
       </div>
 
-      {/* Tarjetas de estadísticas */}
-      <div style={cardsGridStyle}>
-        <div style={statCardStyle}>
-          <div style={statLabelStyle}>
-             Total del Mes
-          </div>
-          <p style={{ ...statValueBaseStyle, color: '#10b981' }}>
-            ${totalMes.toLocaleString('es-AR')}
-          </p>
+      {/* Tarjeta de Estado de Pagos */}
+      <div style={estadoCardStyle}>
+        <div style={estadoIconStyle}>
+          {alDia ? '✅' : '⚠️'}
         </div>
-
-        <div style={statCardStyle}>
-          <div style={statLabelStyle}>
-             Total del Año
-          </div>
-          <p style={{ ...statValueBaseStyle, color: '#2563eb' }}>
-            ${totalAnual.toLocaleString('es-AR')}
+        <h2 style={estadoTitleStyle}>
+          {alDia ? '¡Estás al día!' : 'Tienes pagos pendientes'}
+        </h2>
+        <p style={estadoMessageStyle}>
+          {alDia
+            ? 'No tienes pagos pendientes. ¡Excelente!'
+            : `Tienes ${mesesPendientes.length} mes${mesesPendientes.length > 1 ? 'es' : ''} pendiente${mesesPendientes.length > 1 ? 's' : ''} de pago`
+          }
+        </p>
+        {!alDia && mesesPendientes.length > 0 && (
+          <p style={mesesPendientesStyle}>
+            {mesesPendientes.length} {mesesPendientes.length === 1 ? 'mes debe' : 'meses deben'} ser pagado{mesesPendientes.length === 1 ? '' : 's'}
           </p>
-        </div>
-
-        <div style={statCardStyle}>
-          <div style={statLabelStyle}>
-             Total General
-          </div>
-          <p style={{ ...statValueBaseStyle, color: '#8b5cf6' }}>
-            ${totalGeneral.toLocaleString('es-AR')}
-          </p>
-        </div>
+        )}
       </div>
 
       {/* Tabla de pagos */}
