@@ -155,8 +155,9 @@ const Pagos = () => {
     fetch("http://localhost:8000/payment/paginated")
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          const pagosFormateados = data.map((p: any) => ({
+        // El endpoint devuelve { payments: [...], next_cursor: ... }
+        if (data.payments && Array.isArray(data.payments)) {
+          const pagosFormateados = data.payments.map((p: any) => ({
             id: p.id_pago,
             amount: p.monto,
             fecha_pago: p.fecha_de_pago,
