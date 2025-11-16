@@ -186,14 +186,18 @@ function User() {
 
   const handleEditar = (u: Usuario) => {
     setModoEdicion(u);
-    userRef.current!.value = u.username;
-    emailRef.current!.value = u.email;
-    dniRef.current!.value = u.dni;
-    firstNameRef.current!.value = u.firstname;
-    lastNameRef.current!.value = u.lastname;
     setType(u.type);
     setShowUsersModal(false);
     setShowCreateModal(true);
+
+    // Usar setTimeout para asegurar que el modal se renderice antes de llenar los campos
+    setTimeout(() => {
+      if (userRef.current) userRef.current.value = u.username;
+      if (emailRef.current) emailRef.current.value = u.email;
+      if (dniRef.current) dniRef.current.value = u.dni;
+      if (firstNameRef.current) firstNameRef.current.value = u.firstname;
+      if (lastNameRef.current) lastNameRef.current.value = u.lastname;
+    }, 0);
   };
 
   const handleEliminar = async (id: number) => {
