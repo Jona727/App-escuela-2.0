@@ -22,6 +22,15 @@ interface Pago {
   carrera: string;
 }
 
+interface AlumnoPagos {
+  nombreAlumno: string;
+  pagos: Pago[];
+  totalPagado: number;
+  mesesPagados: string[];
+  mesesDebe: string[];
+  alDia: boolean;
+}
+
 const Pagos = () => {
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [pagos, setPagos] = useState<Pago[]>([]);
@@ -80,22 +89,50 @@ const Pagos = () => {
     }
   };
 
-  const pagosFiltrados = pagos.filter(p =>
-    usuarioPago ? p.usuario?.includes(usuarioPago) : true
-  );
+  // Función para generar meses del año actual hasta el mes actual
+  const generarMesesDelAnio = () => {
+    const meses: string[] = [];
+    const añoActual = new Date().getFullYear();
+    const mesActualNumero = new Date().getMonth() + 1; // 1-12
 
-  const totalMes = pagosFiltrados
-    .filter(p => p.mes_afectado === mesActual)
-    .reduce((acc, p) => acc + (p.amount || 0), 0);
+    for (let mes = 1; mes <= mesActualNumero; mes++) {
+      const mesStr = mes.toString().padStart(2, '0');
+      meses.push(`${añoActual}-${mesStr}`);
+    }
+    return meses;
+  };
 
-  const totalAnual = pagosFiltrados
-    .filter(p => p.mes_afectado?.startsWith(mesActual.slice(0, 4)))
-    .reduce((acc, p) => acc + (p.amount || 0), 0);
+  // Función para agrupar pagos por alumno y calcular estado
+  const agruparPagosPorAlumno = (): AlumnoPagos[] => {
+    const grupos: { [key: string]: Pago[] } = {};
 
-  const totalGeneral = pagosFiltrados.reduce(
-    (acc, p) => acc + (p.amount || 0),
-    0
-  );
+    // Agrupar pagos por alumno
+    pagos.forEach((pago) => {
+      if (!grupos[pago.usuario]) {
+        grupos[pago.usuario] = [];
+      }
+      grupos[pago.usuario].push(pago);
+    });
+
+    const mesesEsperados = generarMesesDelAnio();
+
+    // Crear array de AlumnoPagos con información de estado
+    return Object.entries(grupos).map(([nombreAlumno, pagosList]) => {
+      const mesesPagados = pagosList.map(p => p.mes_afectado);
+      const mesesDebe = mesesEsperados.filter(mes => !mesesPagados.includes(mes));
+      const totalPagado = pagosList.reduce((acc, p) => acc + p.amount, 0);
+      const alDia = mesesDebe.length === 0;
+
+      return {
+        nombreAlumno,
+        pagos: pagosList.sort((a, b) => a.mes_afectado.localeCompare(b.mes_afectado)),
+        totalPagado,
+        mesesPagados,
+        mesesDebe,
+        alDia
+      };
+    }).sort((a, b) => a.nombreAlumno.localeCompare(b.nombreAlumno));
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -347,42 +384,98 @@ const Pagos = () => {
     fontSize: isMobile ? '14px' : '15px',
   };
 
+  const alumnoCardStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '12px',
+    padding: isMobile ? '20px' : '24px',
+    marginBottom: '20px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    border: '1px solid #e5e7eb',
+  };
+
+  const alumnoHeaderStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+    paddingBottom: '12px',
+    borderBottom: '2px solid #e5e7eb',
+    flexWrap: 'wrap',
+    gap: '12px',
+  };
+
+  const alumnoNombreStyle: React.CSSProperties = {
+    fontSize: isMobile ? '18px' : '20px',
+    fontWeight: '600',
+    color: '#111827',
+  };
+
+  const estadoBadgeStyle = (alDia: boolean): React.CSSProperties => ({
+    display: 'inline-block',
+    padding: '6px 16px',
+    borderRadius: '20px',
+    fontSize: '13px',
+    fontWeight: '600',
+    background: alDia ? '#d1fae5' : '#fee2e2',
+    color: alDia ? '#065f46' : '#991b1b',
+  });
+
+  const pagosGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(200px, 1fr))',
+    gap: '12px',
+    marginBottom: '16px',
+  };
+
+  const pagoItemStyle: React.CSSProperties = {
+    padding: '12px 16px',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+    background: '#f9fafb',
+  };
+
+  const mesLabelStyle: React.CSSProperties = {
+    fontSize: '12px',
+    color: '#6b7280',
+    marginBottom: '4px',
+  };
+
+  const montoStyle: React.CSSProperties = {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#10b981',
+  };
+
+  const mesesDebeStyle: React.CSSProperties = {
+    marginTop: '12px',
+    padding: '12px 16px',
+    borderRadius: '8px',
+    background: '#fef2f2',
+    border: '1px solid #fecaca',
+  };
+
+  const mesesDebeListStyle: React.CSSProperties = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    marginTop: '8px',
+  };
+
+  const mesDebeBadgeStyle: React.CSSProperties = {
+    padding: '4px 12px',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: '500',
+    background: '#fee2e2',
+    color: '#991b1b',
+  };
+
   return (
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerContainerStyle}>
         <h1 style={headerTitleStyle}> Gestión de Pagos</h1>
         <p style={headerSubtitleStyle}>Administra pagos y cuotas de manera eficiente</p>
-      </div>
-
-      {/* Tarjetas de estadísticas */}
-      <div style={cardsGridStyle}>
-        <div style={statCardStyle}>
-          <div style={statLabelStyle}>
-             Total del Mes
-          </div>
-          <p style={{ ...statValueBaseStyle, color: '#111827' }}>
-            ${totalMes.toLocaleString('es-AR')}
-          </p>
-        </div>
-
-        <div style={statCardStyle}>
-          <div style={statLabelStyle}>
-             Total del Año
-          </div>
-          <p style={{ ...statValueBaseStyle, color: '#111827' }}>
-            ${totalAnual.toLocaleString('es-AR')}
-          </p>
-        </div>
-
-        <div style={statCardStyle}>
-          <div style={statLabelStyle}>
-             Total General
-          </div>
-          <p style={{ ...statValueBaseStyle, color: '#111827' }}>
-            ${totalGeneral.toLocaleString('es-AR')}
-          </p>
-        </div>
       </div>
 
       {/* Formulario de registro */}
@@ -476,50 +569,94 @@ const Pagos = () => {
         </button>
       </div>
 
-      {/* Tabla de pagos */}
-      <div style={tableContainerStyle}>
-        {pagosFiltrados.length === 0 ? (
-          <div style={emptyStateStyle}>
-             No hay pagos registrados todavía
+      {/* Grid de pagos por alumno */}
+      <div>
+        {pagos.length === 0 ? (
+          <div style={tableContainerStyle}>
+            <div style={emptyStateStyle}>
+               No hay pagos registrados todavía
+            </div>
           </div>
         ) : (
-          <table style={tableStyle}>
-            <thead style={theadStyle}>
-              <tr>
-                <th style={thStyle}> Alumno</th>
-                <th style={thStyle}> Curso</th>
-                <th style={thStyle}> Monto</th>
-                <th style={thStyle}> Mes</th>
-                <th style={thStyle}> Fecha</th>
-                <th style={thStyle}> Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagosFiltrados.map(p => (
-                <tr key={p.id}>
-                  <td style={tdStyle}>{p.usuario}</td>
-                  <td style={tdStyle}>{p.carrera}</td>
-                  <td style={{ ...tdStyle, fontWeight: '600', color: '#10b981' }}>
-                    ${p.amount.toLocaleString('es-AR')}
-                  </td>
-                  <td style={tdStyle}>{p.mes_afectado}</td>
-                  <td style={tdStyle}>
-                    {new Date(p.fecha_pago).toLocaleDateString('es-AR')}
-                  </td>
-                  <td style={tdStyle}>
-                    <button
-                      onClick={() => eliminarPago(p.id)}
-                      style={deleteButtonStyle}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
-                    >
-                      🗑️ Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          agruparPagosPorAlumno().map((alumnoData) => (
+            <div key={alumnoData.nombreAlumno} style={alumnoCardStyle}>
+              {/* Header del alumno */}
+              <div style={alumnoHeaderStyle}>
+                <div>
+                  <h3 style={alumnoNombreStyle}>{alumnoData.nombreAlumno}</h3>
+                  <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
+                    Total pagado: <span style={{ fontWeight: '600', color: '#10b981' }}>
+                      ${alumnoData.totalPagado.toLocaleString('es-AR')}
+                    </span>
+                  </p>
+                </div>
+                <span style={estadoBadgeStyle(alumnoData.alDia)}>
+                  {alumnoData.alDia ? '✓ Al día' : '⚠ Debe meses'}
+                </span>
+              </div>
+
+              {/* Grid de pagos realizados */}
+              <div>
+                <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
+                  Pagos Realizados ({alumnoData.pagos.length})
+                </h4>
+                <div style={pagosGridStyle}>
+                  {alumnoData.pagos.map((pago) => (
+                    <div key={pago.id} style={pagoItemStyle}>
+                      <div style={mesLabelStyle}>
+                        {new Date(pago.mes_afectado + '-01').toLocaleDateString('es-AR', {
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </div>
+                      <div style={montoStyle}>
+                        ${pago.amount.toLocaleString('es-AR')}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+                        {pago.carrera}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#9ca3af' }}>
+                        {new Date(pago.fecha_pago).toLocaleDateString('es-AR')}
+                      </div>
+                      <button
+                        onClick={() => eliminarPago(pago.id)}
+                        style={{
+                          ...deleteButtonStyle,
+                          width: '100%',
+                          marginTop: '8px',
+                          fontSize: '11px',
+                          padding: '4px 8px'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Meses que debe */}
+              {alumnoData.mesesDebe.length > 0 && (
+                <div style={mesesDebeStyle}>
+                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#991b1b', marginBottom: '4px' }}>
+                    ⚠ Meses pendientes de pago ({alumnoData.mesesDebe.length})
+                  </h4>
+                  <div style={mesesDebeListStyle}>
+                    {alumnoData.mesesDebe.map((mes) => (
+                      <span key={mes} style={mesDebeBadgeStyle}>
+                        {new Date(mes + '-01').toLocaleDateString('es-AR', {
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
     </div>
