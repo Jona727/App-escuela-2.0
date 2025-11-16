@@ -111,6 +111,18 @@ const GestionAcademica = () => {
       return;
     }
 
+    // Verificar si la materia ya está asignada al curso
+    const yaAsignada = asignaciones.some(
+      (a) => a.curso_id === parseInt(cursoSeleccionado) && a.carrera_id === parseInt(careerId)
+    );
+
+    if (yaAsignada) {
+      const nombreCurso = cursos.find(c => c.id === parseInt(cursoSeleccionado))?.name;
+      const nombreMateria = carreras.find(c => c.id === parseInt(careerId))?.name;
+      alert(`La materia "${nombreMateria}" ya está asignada al curso "${nombreCurso}". No se pueden duplicar asignaciones.`);
+      return;
+    }
+
     await fetch("http://localhost:8000/asignaciones/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

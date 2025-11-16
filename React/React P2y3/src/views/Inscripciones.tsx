@@ -115,6 +115,45 @@ const Inscripciones = () => {
 
     try {
       const token = localStorage.getItem("token");
+
+      // Verificar si el alumno ya está inscrito en algún curso
+      const checkRes = await fetch(`http://localhost:8000/users/paginated/filtered-async`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          limit: 1,
+          last_seen_id: null,
+          search: "",
+        }),
+      });
+
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        const alumno = checkData.users?.find((u: Alumno) => u.id === parseInt(selectedAlumno));
+
+        // Si el alumno tiene un curso, verificar que no esté inscrito
+        const userDetailRes = await fetch(`http://localhost:8000/users/all?limit=1&last_seen_id=${parseInt(selectedAlumno) - 1}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (userDetailRes.ok) {
+          const userData = await userDetailRes.json();
+          const user = userData.users?.find((u: any) => u.id === parseInt(selectedAlumno));
+
+          if (user && user.curso) {
+            const alumnoNombre = opcionesAlumnos.find(op => op.value === parseInt(selectedAlumno))?.label;
+            setMessage(`Error: ${alumnoNombre || 'El alumno'} ya está inscrito en el curso "${user.curso}". Un alumno solo puede estar inscrito en un curso a la vez.`);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
       const res = await fetch("http://localhost:8000/user/addcurso", {
         method: "POST",
         headers: {

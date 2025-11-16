@@ -234,39 +234,79 @@ const Pagos = () => {
       });
   }, []);
 
-  const registrarPago = () => {
+  const registrarPago = async () => {
     if (!usuarioPago || !cursoPago || !monto || !mesPago) {
       alert("Por favor completa todos los campos");
       return;
     }
 
     const fechaAfectada = `${mesPago}-01`;
+    const mesAfectado = mesPago; // formato: YYYY-MM
 
-    fetch("http://localhost:8000/payment/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: parseInt(usuarioPago),
-        curso_id: parseInt(cursoPago),
-        amount: parseFloat(monto),
-        affect_month: fechaAfectada,
-      }),
-    })
-      .then(res => {
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        return res.json();
-      })
-      .then(() => {
-        setUsuarioPago("");
-        setCursoPago("");
-        setMonto("");
-        setMesPago("");
-        window.location.reload();
-      })
-      .catch(err => {
-        console.error("Error al registrar pago:", err);
-        alert("Error al registrar el pago");
+    // Verificar si ya existe un pago para este usuario en este mes
+    try {
+      const token = localStorage.getItem("token");
+
+      // Obtener el username del usuario seleccionado
+      const userRes = await fetch(`http://localhost:8000/users/all?limit=1000`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        const usuario = userData.users?.find((u: any) => u.id === parseInt(usuarioPago));
+
+        if (usuario) {
+          const username = `${usuario.firstname} ${usuario.lastname}`;
+
+          // Obtener todos los pagos
+          const pagosRes = await fetch("http://localhost:8000/payment/paginated");
+
+          if (pagosRes.ok) {
+            const pagosData = await pagosRes.json();
+
+            if (pagosData.payments && Array.isArray(pagosData.payments)) {
+              // Verificar si ya existe un pago para este alumno en este mes
+              const pagoDuplicado = pagosData.payments.find((p: any) =>
+                p.alumno === username && p.mes_pagado.slice(0, 7) === mesAfectado
+              );
+
+              if (pagoDuplicado) {
+                alert(`Error: Ya existe un pago registrado para ${username} en el mes ${mesAfectado}. No se pueden registrar pagos duplicados para el mismo mes.`);
+                return;
+              }
+            }
+          }
+        }
+      }
+
+      // Si no hay duplicados, proceder con el registro
+      const res = await fetch("http://localhost:8000/payment/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: parseInt(usuarioPago),
+          curso_id: parseInt(cursoPago),
+          amount: parseFloat(monto),
+          affect_month: fechaAfectada,
+        }),
+      });
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+
+      await res.json();
+
+      setUsuarioPago("");
+      setCursoPago("");
+      setMonto("");
+      setMesPago("");
+      window.location.reload();
+    } catch (err) {
+      console.error("Error al registrar pago:", err);
+      alert("Error al registrar el pago");
+    }
   };
 
   const eliminarPago = async (id: number) => {
