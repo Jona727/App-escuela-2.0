@@ -188,7 +188,6 @@ const MisPagos = () => {
       {/* Header */}
       <div style={headerContainerStyle}>
         <h1 style={headerTitleStyle}> Mis Pagos</h1>
-        <p style={headerSubtitleStyle}>Visualiza tu historial de pagos y estadísticas</p>
       </div>
 
       {/* Tarjeta de Estado de Pagos */}
@@ -212,6 +211,11 @@ const MisPagos = () => {
             {mesesPendientes.length} {mesesPendientes.length === 1 ? 'mes debe' : 'meses deben'} ser pagado{mesesPendientes.length === 1 ? '' : 's'}
           </p>
         )}
+      </div>
+
+      {/* Sección de historial */}
+      <div style={{ marginBottom: '16px' }}>
+        <p style={headerSubtitleStyle}>Visualiza tu historial de pagos y estadísticas</p>
       </div>
 
       {/* Tabla de pagos */}
