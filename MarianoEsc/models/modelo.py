@@ -187,6 +187,8 @@ class InputPaginatedRequest(BaseModel):
     limit: int = 20
     last_seen_id: Optional[int] = None
     search: Optional[str] = ""
+    dni: Optional[int] = None
+    curso: Optional[str] = ""
 
 
 class InputPaginatedRequestFilter(BaseModel):

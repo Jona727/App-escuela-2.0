@@ -9,6 +9,7 @@ type Usuario = {
   firstname: string;
   lastname: string;
   type: string;
+  curso?: string;
 };
 
 function User() {
@@ -34,6 +35,10 @@ function User() {
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const tableBodyRef = useRef<HTMLDivElement>(null);
 
+  // Estados para búsqueda
+  const [searchType, setSearchType] = useState<"dni" | "curso">("dni");
+  const [searchValue, setSearchValue] = useState("");
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
@@ -45,15 +50,41 @@ function User() {
 
     setIsLoadingUsers(true);
     try {
-      const url = lastSeenId
-        ? `http://localhost:8000/users/all?limit=10&last_seen_id=${lastSeenId}`
-        : `http://localhost:8000/users/all?limit=10`;
+      let res;
 
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      // Si hay búsqueda activa, usar endpoint filtrado
+      if (searchValue.trim()) {
+        const body: any = {
+          limit: 10,
+          last_seen_id: lastSeenId || null,
+        };
+
+        if (searchType === "dni") {
+          body.dni = parseInt(searchValue) || 0;
+        } else if (searchType === "curso") {
+          body.curso = searchValue;
+        }
+
+        res = await fetch("http://localhost:8000/users/paginated/filtered-async", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(body),
+        });
+      } else {
+        // Sin búsqueda, usar endpoint normal
+        const url = lastSeenId
+          ? `http://localhost:8000/users/all?limit=10&last_seen_id=${lastSeenId}`
+          : `http://localhost:8000/users/all?limit=10`;
+
+        res = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+      }
 
       if (!res.ok) {
         console.error("Error al cargar usuarios:", res.statusText);
@@ -638,6 +669,93 @@ function User() {
               </button>
             </div>
 
+            {/* Barra de búsqueda */}
+            <div style={{
+              marginBottom: '20px',
+              padding: '16px',
+              background: '#f9fafb',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                alignItems: 'flex-end',
+                flexWrap: isMobile ? 'wrap' : 'nowrap'
+              }}>
+                <div style={{ flex: isMobile ? '1 1 100%' : '0 0 150px' }}>
+                  <label style={labelStyle}>Buscar por</label>
+                  <select
+                    style={{...inputStyle, cursor: 'pointer'}}
+                    value={searchType}
+                    onChange={(e) => setSearchType(e.target.value as "dni" | "curso")}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+                  >
+                    <option value="dni">DNI</option>
+                    <option value="curso">Curso</option>
+                  </select>
+                </div>
+
+                <div style={{ flex: isMobile ? '1 1 100%' : '1' }}>
+                  <label style={labelStyle}>
+                    {searchType === "dni" ? "Número de DNI" : "Nombre del curso"}
+                  </label>
+                  <input
+                    type={searchType === "dni" ? "number" : "text"}
+                    style={inputStyle}
+                    placeholder={searchType === "dni" ? "Ej: 12345678" : "Ej: 1er Año"}
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        fetchUsuarios(undefined, true);
+                      }
+                    }}
+                  />
+                </div>
+
+                <div style={{
+                  flex: isMobile ? '1 1 100%' : '0 0 auto',
+                  display: 'flex',
+                  gap: '8px'
+                }}>
+                  <button
+                    onClick={() => fetchUsuarios(undefined, true)}
+                    style={{
+                      ...buttonStyle,
+                      background: '#3b82f6',
+                      padding: '10px 24px'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#2563eb'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#3b82f6'}
+                  >
+                    Buscar
+                  </button>
+
+                  {searchValue && (
+                    <button
+                      onClick={() => {
+                        setSearchValue("");
+                        setTimeout(() => fetchUsuarios(undefined, true), 0);
+                      }}
+                      style={{
+                        ...buttonStyle,
+                        background: '#6b7280',
+                        padding: '10px 20px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#52525b'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#6b7280'}
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div
               style={{ maxHeight: '60vh', overflowY: 'auto', overflowX: 'auto' }}
               onScroll={handleScroll}
@@ -652,8 +770,9 @@ function User() {
                   <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                     <tr>
                       <th style={thStyle}>Usuario</th>
-                      <th style={thStyle}>Email</th>
+                      <th style={thStyle}>DNI</th>
                       <th style={thStyle}>Nombre</th>
+                      <th style={thStyle}>Curso</th>
                       <th style={thStyle}>Tipo</th>
                       <th style={thStyle}>Acciones</th>
                     </tr>
@@ -662,8 +781,25 @@ function User() {
                     {usuarios.map((u) => (
                       <tr key={u.id}>
                         <td style={tdStyle}>{u.username}</td>
-                        <td style={tdStyle}>{u.email}</td>
+                        <td style={tdStyle}>{u.dni}</td>
                         <td style={tdStyle}>{u.firstname} {u.lastname}</td>
+                        <td style={tdStyle}>
+                          {u.curso ? (
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              background: '#e0f2fe',
+                              color: '#0369a1'
+                            }}>
+                              {u.curso}
+                            </span>
+                          ) : (
+                            <span style={{ color: '#9ca3af', fontSize: '13px' }}>Sin curso</span>
+                          )}
+                        </td>
                         <td style={tdStyle}>
                           <span style={badgeStyle(u.type)}>{u.type}</span>
                         </td>

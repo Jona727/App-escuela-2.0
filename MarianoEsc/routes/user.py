@@ -1,7 +1,7 @@
 from re import search
 from fastapi import APIRouter, Request, HTTPException, Query
 from sentry_sdk import last_event_id
-from sqlalchemy import or_
+from sqlalchemy import or_, String
 from sympy import limit
 from models.modelo import InputLogin, Curso, InputUserAddCurso , session, Session, SignupUser, User, UserDetail, ChangePasswordInput, PivoteUserCurso, InputPaginatedRequest
 from pydantic import BaseModel
@@ -42,6 +42,11 @@ def obtener_usuarios(
             usuarios_con_detalles = []
             for usuario in usuarios:
                 if usuario.userdetail:
+                    # Obtener curso del usuario si existe
+                    curso_name = None
+                    if usuario.pivote_user_cursos:
+                        curso_name = usuario.pivote_user_cursos[0].curso.name if usuario.pivote_user_cursos[0].curso else None
+
                     usuario_con_detalle = {
                         "id": usuario.id,
                         "username": usuario.username,
@@ -50,6 +55,7 @@ def obtener_usuarios(
                         "firstname": usuario.userdetail.firstName,
                         "lastname": usuario.userdetail.lastName,
                         "type": usuario.userdetail.type,
+                        "curso": curso_name,
                     }
                     usuarios_con_detalles.append(usuario_con_detalle)
 
@@ -86,6 +92,8 @@ async def get_users_paginated_filtered_async(req: Request, body: InputPaginatedR
         limit = body.limit if body.limit else 20
         last_seen_id = body.last_seen_id
         search_text = (getattr(body, "search", "") or "").strip()
+        dni_filter = getattr(body, "dni", None)
+        curso_filter = (getattr(body, "curso", "") or "").strip()
 
         # Query base
         query = (
@@ -97,6 +105,17 @@ async def get_users_paginated_filtered_async(req: Request, body: InputPaginatedR
 
         if last_seen_id is not None:
             query = query.filter(User.id > last_seen_id)
+
+        # Filtrado por DNI (búsqueda exacta o parcial)
+        if dni_filter is not None:
+            dni_str = str(dni_filter)
+            query = query.filter(UserDetail.dni.cast(String).like(f"%{dni_str}%"))
+
+        # Filtrado por curso
+        if curso_filter:
+            query = query.join(User.pivote_user_cursos).join(PivoteUserCurso.curso).filter(
+                Curso.name.ilike(f"%{curso_filter}%")
+            )
 
         # Filtrado por texto (si viene)
         if search_text:
@@ -117,6 +136,12 @@ async def get_users_paginated_filtered_async(req: Request, body: InputPaginatedR
         for u in users:
             # Asegurate de que userdetail exista y de los nombres de atributos
             detail = u.userdetail
+
+            # Obtener curso del usuario si existe
+            curso_name = None
+            if u.pivote_user_cursos:
+                curso_name = u.pivote_user_cursos[0].curso.name if u.pivote_user_cursos[0].curso else None
+
             usuarios_con_detalles.append({
                 "id": u.id,
                 "username": u.username,
@@ -126,6 +151,7 @@ async def get_users_paginated_filtered_async(req: Request, body: InputPaginatedR
                 "lastname": detail.lastName if detail else None,
                 "dni": detail.dni if detail else None,
                 "type": detail.type if detail else None,
+                "curso": curso_name,
             })
 
         next_cursor = usuarios_con_detalles[-1]["id"] if len(usuarios_con_detalles) == limit else None
