@@ -129,6 +129,31 @@ const GestionAcademica = () => {
     fetchAsignaciones();
   };
 
+  // Función para agrupar asignaciones por curso
+  const agruparPorCurso = () => {
+    const grupos: { [key: number]: { nombre: string; materias: { id: number; nombre: string; asignacionId: number }[] } } = {};
+
+    asignaciones.forEach((a) => {
+      if (!grupos[a.curso_id]) {
+        grupos[a.curso_id] = {
+          nombre: a.curso_nombre,
+          materias: []
+        };
+      }
+      grupos[a.curso_id].materias.push({
+        id: a.carrera_id,
+        nombre: a.carrera_nombre,
+        asignacionId: a.id
+      });
+    });
+
+    return Object.entries(grupos).map(([cursoId, data]) => ({
+      cursoId: parseInt(cursoId),
+      cursoNombre: data.nombre,
+      materias: data.materias
+    }));
+  };
+
   const openMateriasModal = () => {
     fetchCarreras();
     setShowMateriasModal(true);
@@ -340,6 +365,47 @@ const GestionAcademica = () => {
     padding: '40px 20px',
     color: '#9ca3af',
     fontSize: '14px',
+  };
+
+  const cursoCardStyle: React.CSSProperties = {
+    border: '1px solid #e5e7eb',
+    borderRadius: '12px',
+    padding: '20px',
+    marginBottom: '16px',
+    background: '#fafafa',
+  };
+
+  const cursoHeaderStyle: React.CSSProperties = {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: '16px',
+    paddingBottom: '12px',
+    borderBottom: '2px solid #3b82f6',
+  };
+
+  const materiaItemStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '12px 16px',
+    marginBottom: '8px',
+    background: '#ffffff',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+    fontSize: '14px',
+    transition: 'all 0.2s',
+  };
+
+  const materiaBadgeStyle: React.CSSProperties = {
+    display: 'inline-block',
+    padding: '4px 12px',
+    borderRadius: '12px',
+    fontSize: '13px',
+    fontWeight: '500',
+    background: '#dcfce7',
+    color: '#166534',
+    flex: 1,
   };
 
   return (
@@ -604,19 +670,35 @@ const GestionAcademica = () => {
                   No hay asignaciones creadas todavía
                 </div>
               ) : (
-                asignaciones.map((a) => (
-                  <div key={a.id} style={listItemStyle}>
-                    <span style={{ fontWeight: '500', flex: 1 }}>
-                      {a.curso_nombre} <span style={{ color: '#6b7280', fontWeight: '400' }}>→</span> {a.carrera_nombre}
-                    </span>
-                    <button
-                      style={deleteButtonStyle}
-                      onClick={() => eliminarAsignacion(a.id)}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
-                    >
-                      Eliminar
-                    </button>
+                agruparPorCurso().map((curso) => (
+                  <div key={curso.cursoId} style={cursoCardStyle}>
+                    <h3 style={cursoHeaderStyle}>{curso.cursoNombre}</h3>
+                    {curso.materias.length === 0 ? (
+                      <div style={{ ...emptyStateStyle, padding: '20px' }}>
+                        No hay materias asignadas a este curso
+                      </div>
+                    ) : (
+                      <div>
+                        {curso.materias.map((materia) => (
+                          <div
+                            key={materia.asignacionId}
+                            style={materiaItemStyle}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
+                          >
+                            <span style={materiaBadgeStyle}>{materia.nombre}</span>
+                            <button
+                              style={{...deleteButtonStyle, marginLeft: '12px'}}
+                              onClick={() => eliminarAsignacion(materia.asignacionId)}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))
               )}
