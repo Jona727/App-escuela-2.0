@@ -153,17 +153,24 @@ def payament_user(_username: str):
 def add_payment(pay: inputPayment):
     db = Session()
     try:
+        # Convertir el string de fecha a objeto datetime
+        affect_month_datetime = datetime.strptime(pay.affect_month, "%Y-%m-%d")
+
         newPayment = Payment(
             curso_id=pay.curso_id,
             user_id=pay.user_id,
             amount=pay.amount,
-            affect_month=pay.affect_month
+            affect_month=affect_month_datetime
         )
         db.add(newPayment)
         db.commit()
         db.refresh(newPayment)
         res = f"Pago para el alumno {newPayment.user.userdetail.firstName} {newPayment.user.userdetail.lastName}, guardado"
         return {"status": "success", "message": res}
+    except ValueError as ve:
+        db.rollback()
+        print("Error al parsear fecha:", ve)
+        raise HTTPException(status_code=400, detail=f"Formato de fecha inválido. Use YYYY-MM-DD: {str(ve)}")
     except Exception as ex:
         db.rollback()
         print("Error al guardar pago:", ex)

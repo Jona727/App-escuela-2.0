@@ -30,7 +30,7 @@ const Pagos = () => {
   const [usuarioPago, setUsuarioPago] = useState("");
   const [cursoPago, setCursoPago] = useState("");
   const [monto, setMonto] = useState("");
-  const [mesPago, setMesPago] = useState("");
+  const [mesPago, setMesPago] = useState(new Date().toISOString().slice(0, 7));
 
   // Estados para Infinite Scroll
   const [opcionesUsuarios, setOpcionesUsuarios] = useState<{ value: number; label: string }[]>([]);
