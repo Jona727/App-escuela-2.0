@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BookOpen, GraduationCap, Link as LinkIcon, X } from "lucide-react";
 
 type Carrera = {
   id: number;
@@ -22,7 +23,6 @@ type Asignacion = {
 };
 
 const GestionAcademica = () => {
-  const [activeTab, setActiveTab] = useState("carreras");
   const [carreras, setCarreras] = useState<Carrera[]>([]);
   const [nuevaCarrera, setNuevaCarrera] = useState("");
   const [cursos, setCursos] = useState<Curso[]>([]);
@@ -32,16 +32,15 @@ const GestionAcademica = () => {
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+  // Estados para modales
+  const [showMateriasModal, setShowMateriasModal] = useState(false);
+  const [showCursosModal, setShowCursosModal] = useState(false);
+  const [showAsignacionesModal, setShowAsignacionesModal] = useState(false);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    fetchCarreras();
-    fetchCursos();
-    fetchAsignaciones();
   }, []);
 
   const fetchCarreras = async () => {
@@ -63,6 +62,10 @@ const GestionAcademica = () => {
   };
 
   const crearCarrera = async () => {
+    if (!nuevaCarrera.trim()) return;
+    const confirmacion = confirm(`¿Crear la materia "${nuevaCarrera}"?`);
+    if (!confirmacion) return;
+
     await fetch("http://localhost:8000/careers/add", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -72,12 +75,19 @@ const GestionAcademica = () => {
     fetchCarreras();
   };
 
-  const eliminarCarrera = async (id: number) => {
+  const eliminarCarrera = async (id: number, name: string) => {
+    const confirmacion = confirm(`¿Estás seguro que deseas eliminar la materia "${name}"?`);
+    if (!confirmacion) return;
+
     await fetch(`http://localhost:8000/careers/${id}`, { method: "DELETE" });
     fetchCarreras();
   };
 
   const crearCurso = async () => {
+    if (!cursoNombre.trim()) return;
+    const confirmacion = confirm(`¿Crear el curso "${cursoNombre}"?`);
+    if (!confirmacion) return;
+
     await fetch("http://localhost:8000/curso/AddCurso", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -87,137 +97,236 @@ const GestionAcademica = () => {
     fetchCursos();
   };
 
-  const eliminarCurso = async (id: number) => {
+  const eliminarCurso = async (id: number, name: string) => {
+    const confirmacion = confirm(`¿Estás seguro que deseas eliminar el curso "${name}"?`);
+    if (!confirmacion) return;
+
     await fetch(`http://localhost:8000/curso/delete/${id}`, { method: "DELETE" });
     fetchCursos();
   };
 
   const asignarCarreraACurso = async () => {
+    if (!cursoSeleccionado || !careerId) {
+      alert("Por favor selecciona un curso y una materia");
+      return;
+    }
+
     await fetch("http://localhost:8000/asignaciones/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ curso_id: parseInt(cursoSeleccionado), career_id: parseInt(careerId) })
     });
+    setCursoSeleccionado("");
+    setCareerId("");
     fetchAsignaciones();
   };
 
   const eliminarAsignacion = async (id: number) => {
+    const confirmacion = confirm("¿Estás seguro que deseas eliminar esta asignación?");
+    if (!confirmacion) return;
+
     await fetch(`http://localhost:8000/asignaciones/${id}`, { method: "DELETE" });
     fetchAsignaciones();
   };
 
-  // Estilos
+  const openMateriasModal = () => {
+    fetchCarreras();
+    setShowMateriasModal(true);
+  };
+
+  const openCursosModal = () => {
+    fetchCursos();
+    setShowCursosModal(true);
+  };
+
+  const openAsignacionesModal = () => {
+    fetchCarreras();
+    fetchCursos();
+    fetchAsignaciones();
+    setShowAsignacionesModal(true);
+  };
+
+  // Estilos compactos y profesionales
   const containerStyle: React.CSSProperties = {
-    minHeight: '100vh',
-    background: '#f5f7fa',
-    padding: isMobile ? '20px' : '40px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: isMobile ? '24px' : '32px 40px',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   };
 
   const headerStyle: React.CSSProperties = {
-    fontSize: isMobile ? '28px' : '32px',
+    marginBottom: '32px',
+    borderBottom: '1px solid #e5e7eb',
+    paddingBottom: '16px',
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: isMobile ? '24px' : '28px',
     fontWeight: '600',
-    marginBottom: '32px',
     color: '#111827',
-    letterSpacing: '-0.02em',
+    marginBottom: '4px',
+    letterSpacing: '-0.015em',
   };
 
-  const tabsContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    gap: '12px',
-    marginBottom: '32px',
-    flexWrap: 'wrap',
+  const subtitleStyle: React.CSSProperties = {
+    fontSize: isMobile ? '13px' : '14px',
+    color: '#6b7280',
+    fontWeight: '400',
   };
 
-  const tabButtonBase: React.CSSProperties = {
-    padding: isMobile ? '10px 18px' : '12px 24px',
-    borderRadius: '8px',
-    border: 'none',
-    fontSize: isMobile ? '14px' : '15px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    fontFamily: 'inherit',
+  const accessGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+    gap: '20px',
   };
 
-  const tabButtonActive: React.CSSProperties = {
-    ...tabButtonBase,
-    background: '#2563eb',
-    color: 'white',
-    boxShadow: '0 2px 6px rgba(37, 99, 235, 0.3)',
-  };
-
-  const tabButtonInactive: React.CSSProperties = {
-    ...tabButtonBase,
-    background: 'white',
-    color: '#4b5563',
+  const accessCardStyle: React.CSSProperties = {
+    background: '#ffffff',
+    borderRadius: '12px',
+    padding: '24px',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
     border: '1px solid #e5e7eb',
+    transition: 'all 0.2s',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    gap: '16px',
   };
 
-  const contentCardStyle: React.CSSProperties = {
-    background: 'white',
+  const iconContainerStyle = (color: string): React.CSSProperties => ({
+    width: '64px',
+    height: '64px',
+    borderRadius: '12px',
+    background: color,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  });
+
+  const accessTitleStyle: React.CSSProperties = {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: '4px',
+  };
+
+  const accessDescStyle: React.CSSProperties = {
+    fontSize: '14px',
+    color: '#6b7280',
+  };
+
+  // Estilos de modal
+  const overlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  };
+
+  const modalStyle: React.CSSProperties = {
+    background: '#ffffff',
     borderRadius: '12px',
     padding: isMobile ? '24px' : '32px',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
     border: '1px solid #e5e7eb',
+    maxWidth: '700px',
+    width: '100%',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    position: 'relative',
   };
 
-  const sectionTitleStyle: React.CSSProperties = {
-    fontSize: isMobile ? '20px' : '24px',
-    fontWeight: '600',
+  const modalHeaderStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: '24px',
+    paddingBottom: '16px',
+    borderBottom: '1px solid #e5e7eb',
+  };
+
+  const modalTitleStyle: React.CSSProperties = {
+    fontSize: '20px',
+    fontWeight: '600',
     color: '#111827',
-    letterSpacing: '-0.01em',
   };
 
-  const inputStyle: React.CSSProperties = {
-    padding: isMobile ? '10px 14px' : '12px 16px',
-    borderRadius: '8px',
-    border: '1px solid #d1d5db',
-    fontSize: isMobile ? '14px' : '15px',
-    fontFamily: 'inherit',
-    marginRight: '8px',
-    marginBottom: isMobile ? '8px' : '0',
-    minWidth: isMobile ? '100%' : '200px',
-    outline: 'none',
-    transition: 'border-color 0.2s',
-  };
-
-  const selectStyle: React.CSSProperties = {
-    ...inputStyle,
+  const closeButtonStyle: React.CSSProperties = {
+    background: 'transparent',
+    border: 'none',
     cursor: 'pointer',
-    background: 'white',
+    color: '#6b7280',
+    padding: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '6px',
+    transition: 'all 0.2s',
   };
 
   const formContainerStyle: React.CSSProperties = {
     display: 'flex',
-    flexDirection: isMobile ? 'column' : 'row',
-    alignItems: isMobile ? 'stretch' : 'center',
-    gap: isMobile ? '8px' : '0',
+    gap: '12px',
     marginBottom: '24px',
-    flexWrap: 'wrap',
+    flexDirection: isMobile ? 'column' : 'row',
   };
 
-  const primaryButtonStyle: React.CSSProperties = {
-    padding: isMobile ? '10px 20px' : '12px 24px',
+  const inputStyle: React.CSSProperties = {
+    flex: 1,
+    padding: '10px 12px',
+    border: '1px solid #d1d5db',
     borderRadius: '8px',
-    border: 'none',
-    fontSize: isMobile ? '14px' : '15px',
-    fontWeight: '500',
-    cursor: 'pointer',
+    fontSize: '14px',
+    boxSizing: 'border-box',
+    transition: 'all 0.15s',
+    fontFamily: 'inherit',
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    padding: '10px 20px',
     background: '#10b981',
     color: 'white',
-    fontFamily: 'inherit',
+    fontWeight: '500',
+    borderRadius: '8px',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
     transition: 'all 0.2s',
-    boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
-    width: isMobile ? '100%' : 'auto',
+    fontFamily: 'inherit',
+    whiteSpace: 'nowrap',
+  };
+
+  const listContainerStyle: React.CSSProperties = {
+    maxHeight: '400px',
+    overflowY: 'auto',
+  };
+
+  const listItemStyle: React.CSSProperties = {
+    padding: '16px 0',
+    borderBottom: '1px solid #f3f4f6',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '14px',
+    color: '#374151',
+    gap: '12px',
   };
 
   const deleteButtonStyle: React.CSSProperties = {
-    padding: '6px 14px',
+    padding: '6px 12px',
     borderRadius: '6px',
     border: 'none',
-    fontSize: '13px',
+    fontSize: '12px',
     fontWeight: '500',
     cursor: 'pointer',
     background: '#fee2e2',
@@ -226,218 +335,279 @@ const GestionAcademica = () => {
     transition: 'all 0.2s',
   };
 
-  const listContainerStyle: React.CSSProperties = {
-    maxHeight: '420px',
-    overflowY: 'auto',
-    marginTop: '16px',
-  };
-
-  const listStyle: React.CSSProperties = {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0,
-  };
-
-  const listItemStyle: React.CSSProperties = {
-    padding: isMobile ? '14px 0' : '16px 0',
-    borderBottom: '1px solid #f3f4f6',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    fontSize: isMobile ? '14px' : '15px',
-    color: '#374151',
-    gap: '12px',
-  };
-
   const emptyStateStyle: React.CSSProperties = {
     textAlign: 'center',
-    padding: '48px 24px',
+    padding: '40px 20px',
     color: '#9ca3af',
-    fontSize: isMobile ? '14px' : '15px',
+    fontSize: '14px',
   };
 
   return (
     <div style={containerStyle}>
-      <h1 style={headerStyle}> Gestión Académica</h1>
-
-      <div style={tabsContainerStyle}>
-        {[
-          { key: 'carreras', label: ' Materias', emoji: '📖' },
-          { key: 'cursos', label: ' Cursos', emoji: '🎓' },
-          { key: 'asignaciones', label: ' Asignaciones', emoji: '🔗' }
-        ].map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            style={activeTab === tab.key ? tabButtonActive : tabButtonInactive}
-            onMouseEnter={(e) => {
-              if (activeTab !== tab.key) {
-                e.currentTarget.style.background = '#f9fafb';
-                e.currentTarget.style.borderColor = '#d1d5db';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (activeTab !== tab.key) {
-                e.currentTarget.style.background = 'white';
-                e.currentTarget.style.borderColor = '#e5e7eb';
-              }
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Header */}
+      <div style={headerStyle}>
+        <h1 style={titleStyle}>Gestión Académica</h1>
+        <p style={subtitleStyle}>
+          Administra materias, cursos y sus asignaciones
+        </p>
       </div>
 
-      {activeTab === "carreras" && (
-        <div style={contentCardStyle}>
-          <h2 style={sectionTitleStyle}> Gestión de Materias</h2>
-
-          <div style={formContainerStyle}>
-            <input
-              type="text"
-              placeholder="Nombre de la materia"
-              style={inputStyle}
-              value={nuevaCarrera}
-              onChange={(e) => setNuevaCarrera(e.target.value)}
-              onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
-            />
-            <button
-              style={primaryButtonStyle}
-              onClick={crearCarrera}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
-            >
-               Crear Materia
-            </button>
+      {/* Acceso Rápido */}
+      <div style={accessGridStyle}>
+        {/* Materias */}
+        <div
+          style={accessCardStyle}
+          onClick={openMateriasModal}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
+          }}
+        >
+          <div style={iconContainerStyle('#fef3c7')}>
+            <BookOpen size={32} style={{ color: '#f59e0b' }} />
           </div>
+          <div>
+            <h3 style={accessTitleStyle}>Materias</h3>
+            <p style={accessDescStyle}>Crear y gestionar materias</p>
+          </div>
+        </div>
 
-          <div style={listContainerStyle}>
-            <ul style={listStyle}>
+        {/* Cursos */}
+        <div
+          style={accessCardStyle}
+          onClick={openCursosModal}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
+          }}
+        >
+          <div style={iconContainerStyle('#dcfce7')}>
+            <GraduationCap size={32} style={{ color: '#10b981' }} />
+          </div>
+          <div>
+            <h3 style={accessTitleStyle}>Cursos</h3>
+            <p style={accessDescStyle}>Crear y gestionar cursos</p>
+          </div>
+        </div>
+
+        {/* Asignaciones */}
+        <div
+          style={accessCardStyle}
+          onClick={openAsignacionesModal}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
+          }}
+        >
+          <div style={iconContainerStyle('#dbeafe')}>
+            <LinkIcon size={32} style={{ color: '#3b82f6' }} />
+          </div>
+          <div>
+            <h3 style={accessTitleStyle}>Asignaciones</h3>
+            <p style={accessDescStyle}>Asignar materias a cursos</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal Materias */}
+      {showMateriasModal && (
+        <div style={overlayStyle} onClick={() => setShowMateriasModal(false)}>
+          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+            <div style={modalHeaderStyle}>
+              <h2 style={modalTitleStyle}>Gestión de Materias</h2>
+              <button
+                onClick={() => setShowMateriasModal(false)}
+                style={closeButtonStyle}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={formContainerStyle}>
+              <input
+                type="text"
+                placeholder="Nombre de la materia"
+                style={inputStyle}
+                value={nuevaCarrera}
+                onChange={(e) => setNuevaCarrera(e.target.value)}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+                onKeyPress={(e) => e.key === 'Enter' && crearCarrera()}
+              />
+              <button
+                style={buttonStyle}
+                onClick={crearCarrera}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
+              >
+                Crear
+              </button>
+            </div>
+
+            <div style={listContainerStyle}>
               {carreras.length === 0 ? (
                 <div style={emptyStateStyle}>
-                   No hay materias creadas todavía
+                  No hay materias creadas todavía
                 </div>
               ) : (
                 carreras.map((carrera) => (
-                  <li key={carrera.id} style={listItemStyle}>
+                  <div key={carrera.id} style={listItemStyle}>
                     <span style={{ fontWeight: '500' }}>{carrera.name}</span>
                     <button
                       style={deleteButtonStyle}
-                      onClick={() => eliminarCarrera(carrera.id)}
+                      onClick={() => eliminarCarrera(carrera.id, carrera.name)}
                       onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
                       onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
                     >
-                      🗑️ Eliminar
+                      Eliminar
                     </button>
-                  </li>
+                  </div>
                 ))
               )}
-            </ul>
+            </div>
           </div>
         </div>
       )}
 
-      {activeTab === "cursos" && (
-        <div style={contentCardStyle}>
-          <h2 style={sectionTitleStyle}> Gestión de Cursos</h2>
+      {/* Modal Cursos */}
+      {showCursosModal && (
+        <div style={overlayStyle} onClick={() => setShowCursosModal(false)}>
+          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+            <div style={modalHeaderStyle}>
+              <h2 style={modalTitleStyle}>Gestión de Cursos</h2>
+              <button
+                onClick={() => setShowCursosModal(false)}
+                style={closeButtonStyle}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-          <div style={formContainerStyle}>
-            <input
-              type="text"
-              placeholder="Curso (ej: 1° Año, 2° Año)"
-              style={inputStyle}
-              value={cursoNombre}
-              onChange={(e) => setCursoNombre(e.target.value)}
-              onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
-            />
-            <button
-              style={primaryButtonStyle}
-              onClick={crearCurso}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
-            >
-               Crear Curso
-            </button>
-          </div>
+            <div style={formContainerStyle}>
+              <input
+                type="text"
+                placeholder="Nombre del curso (ej: 1° Año, 2° Año)"
+                style={inputStyle}
+                value={cursoNombre}
+                onChange={(e) => setCursoNombre(e.target.value)}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+                onKeyPress={(e) => e.key === 'Enter' && crearCurso()}
+              />
+              <button
+                style={buttonStyle}
+                onClick={crearCurso}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
+              >
+                Crear
+              </button>
+            </div>
 
-          <div style={listContainerStyle}>
-            <ul style={listStyle}>
+            <div style={listContainerStyle}>
               {cursos.length === 0 ? (
                 <div style={emptyStateStyle}>
-                   No hay cursos creados todavía
+                  No hay cursos creados todavía
                 </div>
               ) : (
                 cursos.map((curso) => (
-                  <li key={curso.id} style={listItemStyle}>
+                  <div key={curso.id} style={listItemStyle}>
                     <span style={{ fontWeight: '500' }}>{curso.name}</span>
                     <button
                       style={deleteButtonStyle}
-                      onClick={() => eliminarCurso(curso.id)}
+                      onClick={() => eliminarCurso(curso.id, curso.name)}
                       onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
                       onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
                     >
-                      🗑️ Eliminar
+                      Eliminar
                     </button>
-                  </li>
+                  </div>
                 ))
               )}
-            </ul>
+            </div>
           </div>
         </div>
       )}
 
-      {activeTab === "asignaciones" && (
-        <div style={contentCardStyle}>
-          <h2 style={sectionTitleStyle}> Asignar Materias a Cursos</h2>
+      {/* Modal Asignaciones */}
+      {showAsignacionesModal && (
+        <div style={overlayStyle} onClick={() => setShowAsignacionesModal(false)}>
+          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+            <div style={modalHeaderStyle}>
+              <h2 style={modalTitleStyle}>Asignar Materias a Cursos</h2>
+              <button
+                onClick={() => setShowAsignacionesModal(false)}
+                style={closeButtonStyle}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-          <div style={formContainerStyle}>
-            <select
-              style={selectStyle}
-              value={cursoSeleccionado}
-              onChange={(e) => setCursoSeleccionado(e.target.value)}
-              onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
-            >
-              <option value="">Seleccionar curso</option>
-              {cursos.map((curso) => (
-                <option key={curso.id} value={curso.id}>{curso.name}</option>
-              ))}
-            </select>
-            <select
-              style={selectStyle}
-              value={careerId}
-              onChange={(e) => setCareerId(e.target.value)}
-              onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
-            >
-              <option value="">Seleccionar materia</option>
-              {carreras.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-            <button
-              style={primaryButtonStyle}
-              onClick={asignarCarreraACurso}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
-            >
-               Asignar
-            </button>
-          </div>
+            <div style={formContainerStyle}>
+              <select
+                style={{...inputStyle, cursor: 'pointer'}}
+                value={cursoSeleccionado}
+                onChange={(e) => setCursoSeleccionado(e.target.value)}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+              >
+                <option value="">Seleccionar curso</option>
+                {cursos.map((curso) => (
+                  <option key={curso.id} value={curso.id}>{curso.name}</option>
+                ))}
+              </select>
 
-          <div style={listContainerStyle}>
-            <ul style={listStyle}>
+              <select
+                style={{...inputStyle, cursor: 'pointer'}}
+                value={careerId}
+                onChange={(e) => setCareerId(e.target.value)}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+              >
+                <option value="">Seleccionar materia</option>
+                {carreras.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+
+              <button
+                style={buttonStyle}
+                onClick={asignarCarreraACurso}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
+              >
+                Asignar
+              </button>
+            </div>
+
+            <div style={listContainerStyle}>
               {asignaciones.length === 0 ? (
                 <div style={emptyStateStyle}>
-                   No hay asignaciones creadas todavía
+                  No hay asignaciones creadas todavía
                 </div>
               ) : (
                 asignaciones.map((a) => (
-                  <li key={a.id} style={listItemStyle}>
-                    <span style={{ fontWeight: '500' }}>
-                      Curso: {a.curso_nombre} <span style={{ color: '#6b7280', fontWeight: '400' }}>→</span> Materia: {a.carrera_nombre}
+                  <div key={a.id} style={listItemStyle}>
+                    <span style={{ fontWeight: '500', flex: 1 }}>
+                      {a.curso_nombre} <span style={{ color: '#6b7280', fontWeight: '400' }}>→</span> {a.carrera_nombre}
                     </span>
                     <button
                       style={deleteButtonStyle}
@@ -445,12 +615,12 @@ const GestionAcademica = () => {
                       onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
                       onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
                     >
-                      🗑️ Eliminar
+                      Eliminar
                     </button>
-                  </li>
+                  </div>
                 ))
               )}
-            </ul>
+            </div>
           </div>
         </div>
       )}

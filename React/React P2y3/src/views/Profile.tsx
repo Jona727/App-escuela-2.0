@@ -22,6 +22,7 @@ export default function PerfilConCambioClave() {
   const [isLoading, setIsLoading] = useState(false);
   const [profilePicture, setProfilePicture] = useState<string>("");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [showPasswordCard, setShowPasswordCard] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -118,25 +119,28 @@ export default function PerfilConCambioClave() {
   const containerStyle: React.CSSProperties = {
     maxWidth: '1200px',
     margin: '0 auto',
-    padding: isMobile ? '40px 24px' : '60px 40px',
+    padding: isMobile ? '24px' : '32px 40px',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   };
 
   const headerStyle: React.CSSProperties = {
-    marginBottom: '48px',
+    marginBottom: '32px',
+    borderBottom: '1px solid #e5e7eb',
+    paddingBottom: '16px',
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: isMobile ? '32px' : '40px',
-    fontWeight: '700',
+    fontSize: isMobile ? '24px' : '28px',
+    fontWeight: '600',
     color: '#111827',
-    marginBottom: '8px',
-    letterSpacing: '-0.025em',
+    marginBottom: '4px',
+    letterSpacing: '-0.015em',
   };
 
   const subtitleStyle: React.CSSProperties = {
-    fontSize: isMobile ? '14px' : '16px',
+    fontSize: isMobile ? '13px' : '14px',
     color: '#6b7280',
+    fontWeight: '400',
   };
 
   const gridStyle: React.CSSProperties = {
@@ -224,6 +228,69 @@ export default function PerfilConCambioClave() {
     background: '#5fc683ff',
     color: '#166534',
     border: '1px solid #c2c8d5ff',
+  };
+
+  const changePasswordButtonStyle: React.CSSProperties = {
+    marginTop: '8px',
+    padding: '0',
+    background: 'transparent',
+    color: '#3b82f6',
+    fontWeight: '400',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
+    transition: 'all 0.2s',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    fontFamily: 'inherit',
+    textDecoration: 'none',
+  };
+
+  const overlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  };
+
+  const modalStyle: React.CSSProperties = {
+    background: '#ffffff',
+    borderRadius: '12px',
+    padding: isMobile ? '24px' : '32px',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    border: '1px solid #c2c8d5ff',
+    maxWidth: '600px',
+    width: '100%',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    position: 'relative',
+  };
+
+  const closeButtonStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '16px',
+    right: '16px',
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    color: '#6b7280',
+    fontSize: '24px',
+    lineHeight: '1',
+    padding: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '6px',
+    transition: 'all 0.2s',
   };
 
   const cardStyle: React.CSSProperties = {
@@ -403,6 +470,22 @@ export default function PerfilConCambioClave() {
             <UserCheck size={14} />
             {user.type}
           </div>
+
+          <button
+            onClick={() => setShowPasswordCard(true)}
+            style={changePasswordButtonStyle}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.textDecoration = 'underline';
+              e.currentTarget.style.color = '#2563eb';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.textDecoration = 'none';
+              e.currentTarget.style.color = '#3b82f6';
+            }}
+          >
+            <Lock size={14} />
+            Cambiar contraseña
+          </button>
         </div>
 
         {/* Main Content */}
@@ -449,8 +532,34 @@ export default function PerfilConCambioClave() {
             </div>
           </div>
 
-          {/* Change Password */}
-          <div style={cardStyle}>
+        </div>
+      </div>
+
+      {/* Change Password Modal */}
+      {showPasswordCard && (
+        <div
+          style={overlayStyle}
+          onClick={() => setShowPasswordCard(false)}
+        >
+          <div
+            style={modalStyle}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowPasswordCard(false)}
+              style={closeButtonStyle}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#f3f4f6';
+                e.currentTarget.style.color = '#111827';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = '#6b7280';
+              }}
+            >
+              ×
+            </button>
+
             <h3 style={sectionTitleStyle}>
               <Lock size={20} />
               Cambiar Contraseña
@@ -552,7 +661,7 @@ export default function PerfilConCambioClave() {
             )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* CSS para animación */}
       <style>{`

@@ -1,11 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { BookOpen, CreditCard, Bell, Calendar, CheckCircle } from 'lucide-react';
+import { BookOpen, CreditCard, Calendar, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+interface Course {
+  career: string;
+  total_materias: number;
+  materias_aprobadas: number;
+}
+
+interface Payment {
+  id: number;
+  amount: number;
+  month: string;
+  date: string;
+}
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userName = user.firstname || user.firstName || "Usuario";
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [course, setCourse] = useState<Course | null>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -13,104 +31,125 @@ const Dashboard = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Estilos minimalistas
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Obtener datos del curso
+        const courseRes = await fetch(`http://localhost:8000/asignaciones/me/${user.username}`);
+        if (courseRes.ok) {
+          const courseData = await courseRes.json();
+          setCourse(courseData.course || null);
+        }
+
+        // Obtener últimos pagos
+        const paymentsRes = await fetch(`http://localhost:8000/payment/${user.username}`);
+        if (paymentsRes.ok) {
+          const paymentsData = await paymentsRes.json();
+          setPayments(paymentsData.payments?.slice(0, 3) || []);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user.username) {
+      fetchData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [user.username]);
+
+  // Calcular progreso académico
+  const progress = course && course.total_materias > 0
+    ? Math.round((course.materias_aprobadas / course.total_materias) * 100)
+    : 0;
+
+  // Obtener próximo pago (el más reciente)
+  const nextPayment = payments[0];
+
+  // Estilos compactos y profesionales
   const containerStyle: React.CSSProperties = {
     maxWidth: '1200px',
     margin: '0 auto',
-    padding: isMobile ? '40px 24px' : '60px 40px',
+    padding: isMobile ? '24px' : '32px 40px',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   };
 
-  const welcomeCardStyle: React.CSSProperties = {
-    background: '#ffffff',
-    borderRadius: '12px',
-    padding: isMobile ? '32px 24px' : '40px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    marginBottom: '48px',
+  const headerStyle: React.CSSProperties = {
+    marginBottom: '32px',
+    borderBottom: '1px solid #e5e7eb',
+    paddingBottom: '16px',
   };
 
   const greetingStyle: React.CSSProperties = {
-    fontSize: isMobile ? '14px' : '16px',
+    fontSize: '13px',
     color: '#6b7280',
-    marginBottom: '8px',
-    fontWeight: '500',
+    marginBottom: '4px',
+    fontWeight: '400',
   };
 
   const userNameStyle: React.CSSProperties = {
-    fontSize: isMobile ? '28px' : '36px',
-    fontWeight: '700',
-    color: '#10b981',
-    marginBottom: '8px',
-    letterSpacing: '-0.025em',
+    fontSize: isMobile ? '24px' : '28px',
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: '4px',
+    letterSpacing: '-0.015em',
   };
 
   const subtitleStyle: React.CSSProperties = {
-    fontSize: isMobile ? '15px' : '16px',
-    color: '#6b7280',
-    lineHeight: '1.6',
-  };
-
-  const sectionTitleStyle: React.CSSProperties = {
-    fontSize: isMobile ? '20px' : '24px',
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: '24px',
-    letterSpacing: '-0.02em',
-  };
-
-  const cardsGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))',
-    gap: '24px',
-    marginBottom: '48px',
-  };
-
-  const quickAccessCardStyle: React.CSSProperties = {
-    background: '#ffffff',
-    borderRadius: '12px',
-    padding: '28px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    transition: 'all 0.2s',
-    cursor: 'pointer',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-  };
-
-  const iconContainerStyle: React.CSSProperties = {
-    width: '48px',
-    height: '48px',
-    borderRadius: '10px',
-    background: '#dcfce7',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '4px',
-  };
-
-  const cardTitleStyle: React.CSSProperties = {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: '4px',
-  };
-
-  const cardDescriptionStyle: React.CSSProperties = {
     fontSize: '14px',
     color: '#6b7280',
     lineHeight: '1.5',
   };
 
-  const progressContainerStyle: React.CSSProperties = {
-    marginTop: '12px',
+  const sectionTitleStyle: React.CSSProperties = {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: '16px',
   };
 
-  const progressLabelStyle: React.CSSProperties = {
+  const cardsGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: '20px',
+  };
+
+  const cardStyle: React.CSSProperties = {
+    background: '#ffffff',
+    borderRadius: '12px',
+    padding: '20px',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+    border: '1px solid #e5e7eb',
+    transition: 'all 0.2s',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  };
+
+  const iconContainerStyle = (color: string): React.CSSProperties => ({
+    width: '40px',
+    height: '40px',
+    borderRadius: '8px',
+    background: color,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  });
+
+  const cardTitleStyle: React.CSSProperties = {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#111827',
+  };
+
+  const cardDescriptionStyle: React.CSSProperties = {
     fontSize: '13px',
     color: '#6b7280',
-    marginBottom: '8px',
-    display: 'flex',
-    justifyContent: 'space-between',
+    lineHeight: '1.4',
   };
 
   const progressBarBackgroundStyle: React.CSSProperties = {
@@ -132,141 +171,133 @@ const Dashboard = () => {
   const statItemStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    padding: '16px',
+    gap: '8px',
+    padding: '12px',
     background: '#fafafa',
     borderRadius: '8px',
   };
 
-  const statIconStyle: React.CSSProperties = {
-    color: '#10b981',
-    flexShrink: 0,
-  };
-
-  const statContentStyle: React.CSSProperties = {
-    flex: 1,
-  };
-
-  const statLabelStyle: React.CSSProperties = {
-    fontSize: '13px',
+  const emptyStateStyle: React.CSSProperties = {
+    textAlign: 'center',
+    padding: '40px 20px',
     color: '#6b7280',
-    marginBottom: '4px',
   };
 
-  const statValueStyle: React.CSSProperties = {
-    fontSize: '20px',
-    fontWeight: '700',
-    color: '#111827',
-  };
+  if (isLoading) {
+    return (
+      <div style={containerStyle}>
+        <div style={emptyStateStyle}>
+          <p>Cargando información...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={containerStyle}>
-      {/* Welcome Card */}
-      <div style={welcomeCardStyle}>
+      {/* Header compacto */}
+      <div style={headerStyle}>
         <p style={greetingStyle}>Bienvenido de nuevo,</p>
         <h1 style={userNameStyle}>{userName}</h1>
         <p style={subtitleStyle}>
-          Panel de control - Gestiona tu actividad académica y mantente al día con tus tareas.
+          Mantente al día con tu actividad académica
         </p>
       </div>
 
-      {/* Quick Access Cards */}
+      {/* Acceso Rápido */}
       <h2 style={sectionTitleStyle}>Acceso Rápido</h2>
       <div style={cardsGridStyle}>
-        {/* Mi Cursada Card */}
+        {/* Mi Cursada */}
         <div
-          style={quickAccessCardStyle}
+          style={cardStyle}
+          onClick={() => navigate('/MiCursada')}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+            e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
           }}
         >
-          <div style={iconContainerStyle}>
-            <BookOpen size={24} style={{ color: '#10b981' }} />
+          <div style={iconContainerStyle('#dcfce7')}>
+            <BookOpen size={20} style={{ color: '#10b981' }} />
           </div>
           <div>
             <h3 style={cardTitleStyle}>Mi Cursada</h3>
             <p style={cardDescriptionStyle}>
-              Accede a tus materias, horarios y progreso académico
+              {course ? `${course.career} - ${course.total_materias} materias` : 'Accede a tus materias y progreso'}
             </p>
           </div>
-          <div style={progressContainerStyle}>
-            <div style={progressLabelStyle}>
-              <span>Progreso del semestre</span>
-              <span style={{ fontWeight: '600', color: '#10b981' }}>75%</span>
-            </div>
-            <div style={progressBarBackgroundStyle}>
-              <div style={progressBarFillStyle(75)}></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Próximos Pagos Card */}
-        <div
-          style={quickAccessCardStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-          }}
-        >
-          <div style={iconContainerStyle}>
-            <CreditCard size={24} style={{ color: '#10b981' }} />
-          </div>
-          <div>
-            <h3 style={cardTitleStyle}>Próximos Pagos</h3>
-            <p style={cardDescriptionStyle}>
-              Revisa tus cuotas pendientes y estado de cuenta
-            </p>
-          </div>
-          <div style={{ marginTop: '12px' }}>
-            <div style={statItemStyle}>
-              <Calendar size={18} style={statIconStyle} />
-              <div style={statContentStyle}>
-                <p style={statLabelStyle}>Próximo vencimiento</p>
-                <p style={{ ...statValueStyle, fontSize: '16px' }}>15 de Diciembre</p>
+          {course && (
+            <div style={{ marginTop: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', color: '#6b7280' }}>Progreso</span>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: '#10b981' }}>{progress}%</span>
+              </div>
+              <div style={progressBarBackgroundStyle}>
+                <div style={progressBarFillStyle(progress)}></div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Novedades Card */}
+        {/* Mis Pagos */}
         <div
-          style={quickAccessCardStyle}
+          style={cardStyle}
+          onClick={() => navigate('/MisPagos')}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+            e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
           }}
         >
-          <div style={iconContainerStyle}>
-            <Bell size={24} style={{ color: '#10b981' }} />
+          <div style={iconContainerStyle('#dbeafe')}>
+            <CreditCard size={20} style={{ color: '#3b82f6' }} />
           </div>
           <div>
-            <h3 style={cardTitleStyle}>Novedades</h3>
+            <h3 style={cardTitleStyle}>Mis Pagos</h3>
             <p style={cardDescriptionStyle}>
-              Mantente informado sobre anuncios y actualizaciones
+              {payments.length > 0 ? 'Revisa tu historial de pagos' : 'No hay pagos registrados'}
             </p>
           </div>
-          <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle size={16} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span style={{ fontSize: '14px', color: '#6b7280' }}>Inscripciones abiertas</span>
+          {nextPayment && (
+            <div style={statItemStyle}>
+              <Calendar size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: '11px', color: '#6b7280', marginBottom: '2px' }}>Último pago</p>
+                <p style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>
+                  ${nextPayment.amount.toLocaleString()} - {nextPayment.month}
+                </p>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle size={16} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span style={{ fontSize: '14px', color: '#6b7280' }}>Nuevo contenido disponible</span>
-            </div>
+          )}
+        </div>
+
+        {/* Mi Perfil */}
+        <div
+          style={cardStyle}
+          onClick={() => navigate('/profile')}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
+          }}
+        >
+          <div style={iconContainerStyle('#fef3c7')}>
+            <AlertCircle size={20} style={{ color: '#f59e0b' }} />
+          </div>
+          <div>
+            <h3 style={cardTitleStyle}>Mi Perfil</h3>
+            <p style={cardDescriptionStyle}>
+              Gestiona tu información personal y seguridad
+            </p>
           </div>
         </div>
       </div>
