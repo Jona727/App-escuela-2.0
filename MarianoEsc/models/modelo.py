@@ -147,6 +147,15 @@ class SignupUser(BaseModel):
     lastname: str
     type: UserType
 
+class UpdateUser(BaseModel):
+    username: str
+    password: Optional[str] = None
+    email: EmailStr
+    dni: int
+    firstname: str
+    lastname: str
+    type: UserType
+
 class InputUserDetails(BaseModel):
     dni: int
     firstName: str

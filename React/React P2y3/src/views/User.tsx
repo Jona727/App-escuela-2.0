@@ -142,15 +142,20 @@ function User() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const nuevo = {
+    // Preparar datos según si es edición o creación
+    const nuevo: any = {
       username: userRef.current?.value,
-      password: passRef.current?.value,
       email: emailRef.current?.value,
       dni: parseInt(dniRef.current?.value || "0"),
       firstname: firstNameRef.current?.value,
       lastname: lastNameRef.current?.value,
       type: type,
     };
+
+    // Solo incluir password si NO estamos en modo edición
+    if (!modoEdicion) {
+      nuevo.password = passRef.current?.value;
+    }
 
     const url = modoEdicion
       ? `http://localhost:8000/users/profile/${modoEdicion.id}`
@@ -170,7 +175,7 @@ function User() {
     const data = await res.json();
 
     if (res.ok) {
-      setMsg("Usuario guardado correctamente");
+      setMsg(modoEdicion ? "Usuario actualizado correctamente" : "Usuario creado correctamente");
       fetchUsuarios(undefined, true);
       limpiar();
       setTimeout(() => setShowCreateModal(false), 1500);

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, HTTPException, Query
 from sentry_sdk import last_event_id
 from sqlalchemy import or_, String
 from sympy import limit
-from models.modelo import InputLogin, Curso, InputUserAddCurso , session, Session, SignupUser, User, UserDetail, ChangePasswordInput, PivoteUserCurso, InputPaginatedRequest
+from models.modelo import InputLogin, Curso, InputUserAddCurso , session, Session, SignupUser, UpdateUser, User, UserDetail, ChangePasswordInput, PivoteUserCurso, InputPaginatedRequest
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
@@ -352,26 +352,64 @@ def get_user_profile(user_id: int):
     }
 
 @user.put("/users/profile/{user_id}")
-def update_user_profile(user_id: int, profile: SignupUser):  # o un nuevo modelo para editar
+def update_user_profile(user_id: int, profile: UpdateUser, req: Request):
     try:
+        # Verificar token
+        token_data = Security.verify_token(req.headers)
+        if token_data.get("status") == "error":
+            return JSONResponse(status_code=401, content=token_data)
+
         user = session.query(User).filter(User.id == user_id).first()
         if not user:
             return JSONResponse(status_code=404, content={"status": "error", "message": "Usuario no encontrado"})
 
+        # Verificar si el username ya existe (excepto para el usuario actual)
+        if profile.username != user.username:
+            existing_username = session.query(User).filter(
+                User.username == profile.username,
+                User.id != user_id
+            ).first()
+            if existing_username:
+                return JSONResponse(status_code=400, content={"status": "error", "message": "El nombre de usuario ya existe"})
+
+        # Verificar si el email ya existe (excepto para el usuario actual)
+        if profile.email != user.email:
+            existing_email = session.query(User).filter(
+                User.email == profile.email,
+                User.id != user_id
+            ).first()
+            if existing_email:
+                return JSONResponse(status_code=400, content={"status": "error", "message": "El email ya existe"})
+
+        # Actualizar datos del usuario
+        user.username = profile.username
         user.email = profile.email
 
+        # Actualizar detalles del usuario
         user_detail = session.query(UserDetail).filter(UserDetail.user_id == user.id).first()
-        user_detail.firstName = profile.firstname
-        user_detail.lastName = profile.lastname
-        user_detail.dni = profile.dni
+        if user_detail:
+            # Verificar si el DNI ya existe (excepto para el usuario actual)
+            if profile.dni != user_detail.dni:
+                existing_dni = session.query(UserDetail).filter(
+                    UserDetail.dni == profile.dni,
+                    UserDetail.user_id != user_id
+                ).first()
+                if existing_dni:
+                    return JSONResponse(status_code=400, content={"status": "error", "message": "El DNI ya existe"})
+
+            user_detail.firstName = profile.firstname
+            user_detail.lastName = profile.lastname
+            user_detail.dni = profile.dni
+            user_detail.type = profile.type
 
         session.commit()
 
-        return {"status": "success", "message": "Perfil actualizado correctamente"}
+        return {"status": "success", "message": "Usuario actualizado correctamente"}
 
     except Exception as ex:
         session.rollback()
-        return JSONResponse(status_code=500, content={"status": "error", "message": "Error interno"})
+        print(f"Error al actualizar usuario: {ex}")
+        return JSONResponse(status_code=500, content={"status": "error", "message": "Error interno del servidor"})
 
     finally:
         session.close()
