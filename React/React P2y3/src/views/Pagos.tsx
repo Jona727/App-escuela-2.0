@@ -49,6 +49,9 @@ const Pagos = () => {
   // Estado para manejar el colapso de meses pendientes
   const [mostrarMesesPendientes, setMostrarMesesPendientes] = useState(false);
 
+  // Estado para manejar el colapso de pagos realizados
+  const [mostrarPagosRealizados, setMostrarPagosRealizados] = useState(false);
+
   // Estados para Infinite Scroll
   const [opcionesUsuarios, setOpcionesUsuarios] = useState<{ value: number; label: string }[]>([]);
   const [nextCursor, setNextCursor] = useState<number | null>(null);
@@ -266,12 +269,46 @@ const Pagos = () => {
       });
   };
 
-  const eliminarPago = (id: number) => {
-    fetch(`http://localhost:8000/payment/delete/${id}`, {
-      method: "DELETE",
-    })
-      .then(res => res.json())
-      .then(() => setPagos(pagos.filter(p => p.id !== id)));
+  const eliminarPago = async (id: number) => {
+    const confirmar = window.confirm("¿Estás seguro de que deseas eliminar este pago? Esta acción no se puede deshacer.");
+
+    if (!confirmar) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8000/payment/delete/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al eliminar el pago");
+      }
+
+      // Recargar la búsqueda del alumno si hay uno encontrado
+      if (alumnoEncontrado) {
+        const pagosActualizados = alumnoEncontrado.pagos.filter(p => p.id !== id);
+        const mesesEsperados = generarMesesDelAnio();
+        const mesesPagados = pagosActualizados.map(p => p.mes_afectado);
+        const mesesDebe = mesesEsperados.filter(mes => !mesesPagados.includes(mes));
+        const totalPagado = pagosActualizados.reduce((acc, p) => acc + p.amount, 0);
+        const alDia = mesesDebe.length === 0;
+
+        setAlumnoEncontrado({
+          ...alumnoEncontrado,
+          pagos: pagosActualizados,
+          totalPagado,
+          mesesPagados,
+          mesesDebe,
+          alDia
+        });
+      }
+
+      alert("Pago eliminado exitosamente");
+    } catch (error) {
+      console.error("Error al eliminar pago:", error);
+      alert("Error al eliminar el pago. Por favor intenta nuevamente.");
+    }
   };
 
   // Estilos
@@ -567,6 +604,20 @@ const Pagos = () => {
     width: isMobile ? '100%' : 'auto',
   };
 
+  const pagosRealizadosLinkStyle: React.CSSProperties = {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#2563eb',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginBottom: '12px',
+    borderBottom: '2px solid transparent',
+    transition: 'border-color 0.2s',
+    textDecoration: 'none',
+  };
+
   const modalOverlayStyle: React.CSSProperties = {
     position: 'fixed',
     top: 0,
@@ -815,46 +866,55 @@ const Pagos = () => {
                   </span>
                 </div>
 
-                {/* Grid de pagos realizados */}
+                {/* Grid de pagos realizados - Colapsable */}
                 <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
-                    📋 Pagos Realizados ({alumnoEncontrado.pagos.length})
-                  </h4>
-                  <div style={pagosGridStyle}>
-                    {alumnoEncontrado.pagos.map((pago) => (
-                      <div key={pago.id} style={pagoItemStyle}>
-                        <div style={mesLabelStyle}>
-                          {new Date(pago.mes_afectado + '-01').toLocaleDateString('es-AR', {
-                            month: 'long',
-                            year: 'numeric'
-                          })}
+                  <a
+                    onClick={() => setMostrarPagosRealizados(!mostrarPagosRealizados)}
+                    style={pagosRealizadosLinkStyle}
+                    onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#2563eb'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
+                  >
+                    <span>{mostrarPagosRealizados ? '▼' : '▶'}</span>
+                    <span>📋 Pagos Realizados ({alumnoEncontrado.pagos.length})</span>
+                  </a>
+
+                  {mostrarPagosRealizados && (
+                    <div style={pagosGridStyle}>
+                      {alumnoEncontrado.pagos.map((pago) => (
+                        <div key={pago.id} style={pagoItemStyle}>
+                          <div style={mesLabelStyle}>
+                            {new Date(pago.mes_afectado + '-01').toLocaleDateString('es-AR', {
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </div>
+                          <div style={montoStyle}>
+                            ${pago.amount.toLocaleString('es-AR')}
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+                            {pago.carrera}
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#9ca3af' }}>
+                            {new Date(pago.fecha_pago).toLocaleDateString('es-AR')}
+                          </div>
+                          <button
+                            onClick={() => eliminarPago(pago.id)}
+                            style={{
+                              ...deleteButtonStyle,
+                              width: '100%',
+                              marginTop: '8px',
+                              fontSize: '11px',
+                              padding: '4px 8px'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                          >
+                            Eliminar
+                          </button>
                         </div>
-                        <div style={montoStyle}>
-                          ${pago.amount.toLocaleString('es-AR')}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
-                          {pago.carrera}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#9ca3af' }}>
-                          {new Date(pago.fecha_pago).toLocaleDateString('es-AR')}
-                        </div>
-                        <button
-                          onClick={() => eliminarPago(pago.id)}
-                          style={{
-                            ...deleteButtonStyle,
-                            width: '100%',
-                            marginTop: '8px',
-                            fontSize: '11px',
-                            padding: '4px 8px'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Meses que debe - Sección colapsable */}
