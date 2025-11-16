@@ -110,35 +110,35 @@ const MisPagos = () => {
   const estadoCardStyle: React.CSSProperties = {
     background: 'white',
     borderRadius: '12px',
-    padding: isMobile ? '32px 24px' : '40px 32px',
+    padding: isMobile ? '20px' : '24px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
     border: alDia ? '2px solid #10b981' : '2px solid #ef4444',
     marginBottom: '32px',
     textAlign: 'center',
-    maxWidth: '600px',
+    maxWidth: '450px',
     margin: '0 auto 32px auto',
   };
 
   const estadoIconStyle: React.CSSProperties = {
-    fontSize: isMobile ? '48px' : '64px',
-    marginBottom: '16px',
+    fontSize: isMobile ? '32px' : '40px',
+    marginBottom: '12px',
   };
 
   const estadoTitleStyle: React.CSSProperties = {
-    fontSize: isMobile ? '24px' : '28px',
-    fontWeight: '700',
+    fontSize: isMobile ? '18px' : '20px',
+    fontWeight: '600',
     color: alDia ? '#10b981' : '#ef4444',
-    marginBottom: '8px',
+    marginBottom: '6px',
   };
 
   const estadoMessageStyle: React.CSSProperties = {
-    fontSize: isMobile ? '14px' : '16px',
+    fontSize: isMobile ? '13px' : '14px',
     color: '#6b7280',
-    marginBottom: mesesPendientes.length > 0 ? '16px' : '0',
+    marginBottom: mesesPendientes.length > 0 ? '12px' : '0',
   };
 
   const mesesPendientesStyle: React.CSSProperties = {
-    fontSize: isMobile ? '16px' : '18px',
+    fontSize: isMobile ? '14px' : '15px',
     fontWeight: '600',
     color: '#374151',
   };
@@ -193,9 +193,11 @@ const MisPagos = () => {
 
       {/* Tarjeta de Estado de Pagos */}
       <div style={estadoCardStyle}>
-        <div style={estadoIconStyle}>
-          {alDia ? '✅' : '⚠️'}
-        </div>
+        {alDia && (
+          <div style={estadoIconStyle}>
+            ✅
+          </div>
+        )}
         <h2 style={estadoTitleStyle}>
           {alDia ? '¡Estás al día!' : 'Tienes pagos pendientes'}
         </h2>
