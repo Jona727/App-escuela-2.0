@@ -195,19 +195,37 @@ export default function MiCursada() {
     border: '1px solid #e5e7eb',
   };
 
-  const materiaNombreStyle: React.CSSProperties = {
-    fontSize: '16px',
-    fontWeight: '600',
+  const materiasTableStyle: React.CSSProperties = {
+    width: '100%',
+    borderCollapse: 'separate',
+    borderSpacing: '0',
+  };
+
+  const materiaRowStyle: React.CSSProperties = {
+    borderBottom: '1px solid #f3f4f6',
+    transition: 'background-color 0.15s',
+  };
+
+  const materiaCellStyle: React.CSSProperties = {
+    padding: '20px 0',
+    fontSize: '15px',
+    fontWeight: '500',
     color: '#111827',
+  };
+
+  const estadoCellStyle: React.CSSProperties = {
+    padding: '20px 0',
+    textAlign: 'right',
+    whiteSpace: 'nowrap',
   };
 
   const estadoBadgeStyle: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '6px',
+    gap: '8px',
     fontSize: '14px',
     color: '#6b7280',
-    fontWeight: '400',
+    fontWeight: '500',
   };
 
   const loadingStyle: React.CSSProperties = {
@@ -269,23 +287,6 @@ export default function MiCursada() {
 
   const emptyMessageStyle: React.CSSProperties = {
     fontSize: '14px',
-  };
-
-  const materiasGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: '16px',
-    marginTop: '32px',
-  };
-
-  const materiaCardStyle: React.CSSProperties = {
-    background: 'white',
-    borderRadius: '12px',
-    padding: '24px',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-    border: '1px solid #e5e7eb',
-    transition: 'all 0.2s',
-    cursor: 'default',
   };
 
   if (loading) {
@@ -389,28 +390,33 @@ export default function MiCursada() {
           </div>
 
           {materias && materias.length > 0 ? (
-            <div style={materiasGridStyle}>
-              {materias.map((materia) => (
-                <div
-                  key={materia.id}
-                  style={materiaCardStyle}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.12)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
-                  }}
-                >
-                  <h3 style={materiaNombreStyle}>{materia.nombre}</h3>
-                  <div style={{ ...estadoBadgeStyle, marginTop: '16px' }}>
-                    {getEstadoIcon(materia.estado)}
-                    <span>{materia.estado}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <table style={materiasTableStyle}>
+              <tbody>
+                {materias.map((materia, index) => (
+                  <tr
+                    key={materia.id}
+                    style={{
+                      ...materiaRowStyle,
+                      borderBottom: index === materias.length - 1 ? 'none' : '1px solid #f3f4f6',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#fafafa';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    <td style={materiaCellStyle}>{materia.nombre}</td>
+                    <td style={estadoCellStyle}>
+                      <div style={estadoBadgeStyle}>
+                        {getEstadoIcon(materia.estado)}
+                        <span>{materia.estado}</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
             <div style={emptyStyle}>
               <p style={emptyTitleStyle}>No hay materias asignadas</p>
