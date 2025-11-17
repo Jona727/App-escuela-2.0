@@ -223,7 +223,14 @@ const Pagos = () => {
             usuario: p.alumno,
             carrera: p.curso_afectado,
           }));
-          setPagos(pagosFormateados);
+
+          // Filtrar solo pagos del ciclo lectivo actual (2025)
+          const cicloLectivoActual = "2025";
+          const pagosCicloActual = pagosFormateados.filter(p =>
+            p.mes_afectado?.startsWith(cicloLectivoActual)
+          );
+
+          setPagos(pagosCicloActual);
         } else {
           setPagos([]);
         }
