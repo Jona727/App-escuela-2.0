@@ -427,7 +427,6 @@ export default function PerfilConCambioClave() {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Mi Perfil</h1>
         <p style={subtitleStyle}>Gestiona tu información personal y configuración de seguridad</p>
       </div>
 

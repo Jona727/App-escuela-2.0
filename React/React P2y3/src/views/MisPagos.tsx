@@ -185,10 +185,7 @@ const MisPagos = () => {
 
   return (
     <div style={containerStyle}>
-      {/* Header */}
-      <div style={headerContainerStyle}>
-        <h1 style={headerTitleStyle}> Mis Pagos</h1>
-      </div>
+      
 
       {/* Tarjeta de Estado de Pagos */}
       <div style={estadoCardStyle}>
