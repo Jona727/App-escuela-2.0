@@ -153,11 +153,27 @@ def payament_user(_username: str):
 def add_payment(pay: inputPayment):
     db = Session()
     try:
+        # Convertir el string de fecha a datetime con hora del mediodía para evitar problemas de zona horaria
+        # Si viene "2025-11-01", lo guardamos como "2025-11-01 12:00:00"
+        if isinstance(pay.affect_month, str):
+            # Parsear la fecha y establecer hora del mediodía
+            date_parts = pay.affect_month.split('-')
+            affect_month_dt = datetime(
+                year=int(date_parts[0]),
+                month=int(date_parts[1]),
+                day=int(date_parts[2]),
+                hour=12,  # Mediodía para evitar problemas de zona horaria
+                minute=0,
+                second=0
+            )
+        else:
+            affect_month_dt = pay.affect_month
+
         newPayment = Payment(
             curso_id=pay.curso_id,
             user_id=pay.user_id,
             amount=pay.amount,
-            affect_month=pay.affect_month
+            affect_month=affect_month_dt
         )
         db.add(newPayment)
         db.commit()
