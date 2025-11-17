@@ -17,6 +17,15 @@ type Curso = {
   status: string;
 };
 
+type AlumnoInscrito = {
+  id: number;
+  firstname: string;
+  lastname: string;
+  dni: string;
+  alDia: boolean;
+  mesesPendientes: number;
+};
+
 const Inscripciones = () => {
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [selectedAlumno, setSelectedAlumno] = useState("");
@@ -24,6 +33,12 @@ const Inscripciones = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Estados para modal de alumnos por curso
+  const [mostrarModalCurso, setMostrarModalCurso] = useState(false);
+  const [cursoSeleccionadoModal, setCursoSeleccionadoModal] = useState<Curso | null>(null);
+  const [alumnosDelCurso, setAlumnosDelCurso] = useState<AlumnoInscrito[]>([]);
+  const [loadingAlumnos, setLoadingAlumnos] = useState(false);
 
   // Estados para Infinite Scroll
   const [opcionesAlumnos, setOpcionesAlumnos] = useState<{ value: number; label: string }[]>([]);
@@ -103,6 +118,81 @@ const Inscripciones = () => {
 
     cargarCursos();
   }, []);
+
+  const generarMesesDelAnio = () => {
+    const meses: string[] = [];
+    const añoActual = new Date().getFullYear();
+    const mesActualNumero = new Date().getMonth() + 1;
+
+    for (let mes = 1; mes <= mesActualNumero; mes++) {
+      const mesStr = mes.toString().padStart(2, '0');
+      meses.push(`${añoActual}-${mesStr}`);
+    }
+    return meses;
+  };
+
+  const cargarAlumnosDeCurso = async (curso: Curso) => {
+    setCursoSeleccionadoModal(curso);
+    setMostrarModalCurso(true);
+    setLoadingAlumnos(true);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      // Obtener todos los usuarios
+      const usersRes = await fetch("http://localhost:8000/users/all?limit=1000", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!usersRes.ok) {
+        throw new Error("Error al cargar usuarios");
+      }
+
+      const usersData = await usersRes.json();
+
+      // Filtrar usuarios que pertenecen a este curso
+      const alumnosEnCurso = usersData.users?.filter(
+        (u: any) => u.curso === curso.name && u.type.toLowerCase().includes("alumno")
+      ) || [];
+
+      // Obtener todos los pagos
+      const pagosRes = await fetch("http://localhost:8000/payment/paginated");
+      const pagosData = await pagosRes.json();
+
+      const mesesEsperados = generarMesesDelAnio();
+
+      // Calcular estado de pagos para cada alumno
+      const alumnosConEstado: AlumnoInscrito[] = alumnosEnCurso.map((alumno: any) => {
+        const nombreCompleto = `${alumno.firstname} ${alumno.lastname}`;
+
+        // Filtrar pagos de este alumno
+        const pagosAlumno = pagosData.payments?.filter(
+          (p: any) => p.alumno === nombreCompleto
+        ) || [];
+
+        const mesesPagados = pagosAlumno.map((p: any) => p.mes_pagado.slice(0, 7));
+        const mesesPendientes = mesesEsperados.filter(mes => !mesesPagados.includes(mes));
+
+        return {
+          id: alumno.id,
+          firstname: alumno.firstname,
+          lastname: alumno.lastname,
+          dni: alumno.dni,
+          alDia: mesesPendientes.length === 0,
+          mesesPendientes: mesesPendientes.length,
+        };
+      });
+
+      setAlumnosDelCurso(alumnosConEstado);
+    } catch (error) {
+      console.error("Error al cargar alumnos del curso:", error);
+      alert("Error al cargar los alumnos del curso");
+    } finally {
+      setLoadingAlumnos(false);
+    }
+  };
 
   const handleInscribir = async () => {
     if (!selectedAlumno || !selectedCurso) {
@@ -315,6 +405,111 @@ const Inscripciones = () => {
     color: '#2563eb',
   };
 
+  const cursosListCardStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '12px',
+    padding: isMobile ? '24px' : '32px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    border: '1px solid #e5e7eb',
+  };
+
+  const cursoLinkStyle: React.CSSProperties = {
+    display: 'block',
+    padding: '16px 20px',
+    marginBottom: '12px',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+    fontSize: '16px',
+    fontWeight: '500',
+    color: '#2563eb',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    textDecoration: 'none',
+    background: 'white',
+  };
+
+  const modalOverlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  };
+
+  const modalContentStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '16px',
+    maxWidth: '1000px',
+    width: '100%',
+    maxHeight: '85vh',
+    overflowY: 'auto',
+    position: 'relative',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  };
+
+  const modalHeaderStyle: React.CSSProperties = {
+    padding: isMobile ? '20px' : '24px',
+    borderBottom: '2px solid #e5e7eb',
+    position: 'sticky',
+    top: 0,
+    background: 'white',
+    zIndex: 10,
+    borderRadius: '16px 16px 0 0',
+  };
+
+  const modalBodyStyle: React.CSSProperties = {
+    padding: isMobile ? '20px' : '24px',
+  };
+
+  const closeButtonStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: isMobile ? '16px' : '20px',
+    right: isMobile ? '16px' : '20px',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    border: 'none',
+    fontSize: '20px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    background: '#fee2e2',
+    color: '#dc2626',
+    fontFamily: 'inherit',
+    transition: 'all 0.2s',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  };
+
+  const alumnoGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))',
+    gap: '16px',
+  };
+
+  const alumnoCardStyle: React.CSSProperties = {
+    padding: '16px',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+    background: '#f9fafb',
+  };
+
+  const alumnoBadgeStyle = (alDia: boolean): React.CSSProperties => ({
+    display: 'inline-block',
+    padding: '4px 12px',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: '600',
+    background: alDia ? '#d1fae5' : '#fee2e2',
+    color: alDia ? '#065f46' : '#991b1b',
+    marginTop: '8px',
+  });
+
   return (
     <div style={containerStyle}>
       {/* Header */}
@@ -420,24 +615,92 @@ const Inscripciones = () => {
         )}
       </div>
 
-      {/* Estado de carga */}
-      <div style={statsCardStyle}>
-        <h3 style={{ ...cardTitleStyle, marginBottom: '16px' }}>
-           Estado de Carga
+      {/* Lista de cursos */}
+      <div style={cursosListCardStyle}>
+        <h3 style={{ ...cardTitleStyle, marginBottom: '20px' }}>
+          📚 Cursos Disponibles
         </h3>
 
-        <div style={statsGridStyle}>
-          <div style={statItemStyle}>
-            <div style={statLabelStyle}> Alumnos cargados</div>
-            <div style={statValueStyle}>{opcionesAlumnos.length}</div>
+        {cursos.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
+            No hay cursos disponibles
           </div>
+        ) : (
+          <div>
+            {cursos.map((curso) => (
+              <div
+                key={curso.id}
+                style={cursoLinkStyle}
+                onClick={() => cargarAlumnosDeCurso(curso)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#eff6ff';
+                  e.currentTarget.style.borderColor = '#3b82f6';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'white';
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                }}
+              >
+                🎓 {curso.name}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-          <div style={statItemStyle}>
-            <div style={statLabelStyle}> Cursos disponibles</div>
-            <div style={statValueStyle}>{cursos.length}</div>
+      {/* Modal de alumnos por curso */}
+      {mostrarModalCurso && cursoSeleccionadoModal && (
+        <div style={modalOverlayStyle} onClick={() => setMostrarModalCurso(false)}>
+          <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+            {/* Header del modal */}
+            <div style={modalHeaderStyle}>
+              <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
+                👥 Alumnos de {cursoSeleccionadoModal.name}
+              </h2>
+              <p style={{ fontSize: isMobile ? '13px' : '14px', color: '#6b7280' }}>
+                Estado de pagos al día de hoy
+              </p>
+              <button
+                onClick={() => setMostrarModalCurso(false)}
+                style={closeButtonStyle}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body del modal */}
+            <div style={modalBodyStyle}>
+              {loadingAlumnos ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                  Cargando alumnos...
+                </div>
+              ) : alumnosDelCurso.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
+                  No hay alumnos inscritos en este curso
+                </div>
+              ) : (
+                <div style={alumnoGridStyle}>
+                  {alumnosDelCurso.map((alumno) => (
+                    <div key={alumno.id} style={alumnoCardStyle}>
+                      <div style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
+                        {alumno.firstname} {alumno.lastname}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>
+                        DNI: {alumno.dni}
+                      </div>
+                      <div style={alumnoBadgeStyle(alumno.alDia)}>
+                        {alumno.alDia ? '✓ Al día' : `⚠ ${alumno.mesesPendientes} ${alumno.mesesPendientes === 1 ? 'mes' : 'meses'} pendiente${alumno.mesesPendientes === 1 ? '' : 's'}`}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
