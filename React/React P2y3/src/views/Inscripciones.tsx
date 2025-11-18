@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Select from 'react-select';
+import { RefreshCw } from 'lucide-react';
 
 type Alumno = {
   id: number;
@@ -44,6 +45,45 @@ const Inscripciones = () => {
   const [opcionesAlumnos, setOpcionesAlumnos] = useState<{ value: number; label: string }[]>([]);
   const [nextCursor, setNextCursor] = useState<number | null>(null);
   const [isLoadingAlumnos, setIsLoadingAlumnos] = useState(false);
+  const [isRefreshingAlumnos, setIsRefreshingAlumnos] = useState(false);
+
+  // Función para refrescar la lista completa de alumnos
+  const refrescarListaAlumnos = async () => {
+    setIsRefreshingAlumnos(true);
+    // Limpiar el estado actual
+    setOpcionesAlumnos([]);
+    setNextCursor(null);
+
+    try {
+      const url = `http://localhost:8000/users/all?limit=20`;
+      const token = localStorage.getItem("token");
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.users && Array.isArray(data.users)) {
+        const soloAlumnos = data.users.filter((user: Alumno) =>
+          user.type.toLowerCase().includes("alumno")
+        );
+
+        const newOptions = soloAlumnos.map((alumno: Alumno) => ({
+          value: alumno.id,
+          label: `${alumno.firstname} ${alumno.lastname} - DNI: ${alumno.dni}`,
+        }));
+
+        setOpcionesAlumnos(newOptions);
+        setNextCursor(data.next_cursor || null);
+      }
+    } catch (error) {
+      console.error("Error refrescando alumnos:", error);
+    } finally {
+      setIsRefreshingAlumnos(false);
+    }
+  };
 
   // Función para cargar alumnos con paginación
   const fetchAlumnos = async (lastSeenId?: number) => {
@@ -96,6 +136,16 @@ const Inscripciones = () => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Recargar alumnos cuando la ventana recibe foco (detecta cambios de otras vistas)
+  useEffect(() => {
+    const handleFocus = () => {
+      refrescarListaAlumnos();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
 
   useEffect(() => {
@@ -526,9 +576,51 @@ const Inscripciones = () => {
 
         <div style={formGridStyle}>
           <div>
-            <label style={labelStyle}>
-               Seleccionar Alumno
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label style={{ ...labelStyle, marginBottom: '0' }}>
+                 Seleccionar Alumno
+              </label>
+              <button
+                onClick={refrescarListaAlumnos}
+                disabled={isRefreshingAlumnos}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  background: 'white',
+                  cursor: isRefreshingAlumnos ? 'not-allowed' : 'pointer',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  color: '#6b7280',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s',
+                  opacity: isRefreshingAlumnos ? 0.6 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isRefreshingAlumnos) {
+                    e.currentTarget.style.background = '#f9fafb';
+                    e.currentTarget.style.borderColor = '#9ca3af';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isRefreshingAlumnos) {
+                    e.currentTarget.style.background = 'white';
+                    e.currentTarget.style.borderColor = '#d1d5db';
+                  }
+                }}
+                title="Refrescar lista de alumnos"
+              >
+                <RefreshCw
+                  size={14}
+                  style={{
+                    animation: isRefreshingAlumnos ? 'spin 1s linear infinite' : 'none'
+                  }}
+                />
+                {isRefreshingAlumnos ? 'Actualizando...' : 'Refrescar'}
+              </button>
+            </div>
             <Select
               options={opcionesAlumnos}
               value={opcionesAlumnos.find(op => op.value === parseInt(selectedAlumno)) || null}
@@ -701,6 +793,14 @@ const Inscripciones = () => {
           </div>
         </div>
       )}
+
+      {/* CSS para animación */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
