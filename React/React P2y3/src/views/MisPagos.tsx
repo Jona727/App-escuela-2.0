@@ -71,13 +71,7 @@ const MisPagos = () => {
           curso: p.curso
         }));
 
-        // Filtrar solo pagos del ciclo lectivo actual (2025)
-        const cicloLectivoActual = "2025";
-        const pagosCicloActual = pagosFormateados.filter(p =>
-          p.mes_afectado?.startsWith(cicloLectivoActual)
-        );
-
-        setPagos(pagosCicloActual);
+        setPagos(pagosFormateados);
 
       } catch (err) {
         console.error("Error al obtener pagos:", err);
@@ -192,7 +186,6 @@ const MisPagos = () => {
   return (
     <div style={containerStyle}>
       
-
       {/* Tarjeta de Estado de Pagos */}
       <div style={estadoCardStyle}>
         {alDia && (

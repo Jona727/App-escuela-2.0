@@ -31,6 +31,23 @@ interface AlumnoPagos {
   alDia: boolean;
 }
 
+// Interfaces para datos de la API
+interface PagoAPI {
+  id_pago: number;
+  monto: number;
+  fecha_de_pago: string;
+  mes_pagado: string;
+  alumno: string;
+  curso_afectado: string;
+}
+
+interface UsuarioAPI {
+  id: number;
+  firstname: string;
+  lastname: string;
+  dni?: number;
+}
+
 const Pagos = () => {
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [pagos, setPagos] = useState<Pago[]>([]);
@@ -57,7 +74,12 @@ const Pagos = () => {
   const [nextCursor, setNextCursor] = useState<number | null>(null);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
-  const mesActual = new Date().toISOString().slice(0, 7);
+  // Usar el ciclo lectivo 2025 para calcular el mes actual
+  const mesActual = (() => {
+    const fechaActual = new Date();
+    const mesNumero = (fechaActual.getMonth() + 1).toString().padStart(2, '0');
+    return `2025-${mesNumero}`;
+  })();
 
   // Función para cargar usuarios con paginación
   const fetchUsers = async (lastSeenId?: number) => {
@@ -100,23 +122,29 @@ const Pagos = () => {
     }
   };
 
-  // Función para generar meses del año actual hasta el mes actual
+  // Función para generar meses del año del ciclo lectivo (2025) hasta el mes actual
   const generarMesesDelAnio = () => {
     const meses: string[] = [];
-    const añoActual = new Date().getFullYear();
-    const mesActualNumero = new Date().getMonth() + 1; // 1-12
+    const cicloLectivo = 2025;
+    const fechaActual = new Date();
+    const añoActual = fechaActual.getFullYear();
+    const mesActualNumero = fechaActual.getMonth() + 1; // 1-12
 
-    for (let mes = 1; mes <= mesActualNumero; mes++) {
+    // Si estamos en el año del ciclo lectivo, generar hasta el mes actual
+    // Si ya pasó el ciclo, generar todos los 12 meses
+    const ultimoMes = añoActual === cicloLectivo ? mesActualNumero : 12;
+
+    for (let mes = 1; mes <= ultimoMes; mes++) {
       const mesStr = mes.toString().padStart(2, '0');
-      meses.push(`${añoActual}-${mesStr}`);
+      meses.push(`${cicloLectivo}-${mesStr}`);
     }
     return meses;
   };
 
   // Función para buscar alumno por DNI en los usuarios cargados
-  const buscarAlumnoPorDNI = async () => {
+  const buscarAlumnoPorDNI = async (silent = false) => {
     if (!dniBusqueda.trim()) {
-      alert("Por favor ingresa un DNI");
+      if (!silent) alert("Por favor ingresa un DNI");
       return;
     }
 
@@ -135,14 +163,13 @@ const Pagos = () => {
       });
 
       if (!res.ok) {
-        alert("Error al buscar alumno");
+        if (!silent) alert("Error al buscar alumno");
         return;
       }
 
       const data = await res.json();
 
       if (!data.users || data.users.length === 0) {
-        alert("No se encontró ningún alumno con ese DNI");
         setAlumnoEncontrado(null);
         return;
       }
@@ -154,7 +181,6 @@ const Pagos = () => {
       const pagosDeAlumno = pagos.filter(p => p.usuario === nombreCompleto);
 
       if (pagosDeAlumno.length === 0) {
-        alert("Este alumno no tiene pagos registrados");
         setAlumnoEncontrado(null);
         return;
       }
@@ -177,7 +203,7 @@ const Pagos = () => {
       setMostrarModalAlumno(true);
     } catch (error) {
       console.error("Error al buscar alumno:", error);
-      alert("Error al buscar alumno");
+      if (!silent) alert("Error al buscar alumno");
     }
   };
 
@@ -191,6 +217,50 @@ const Pagos = () => {
   const cerrarModal = () => {
     setMostrarModalAlumno(false);
   };
+
+  // Búsqueda inteligente con debounce para DNI
+  useEffect(() => {
+    // Solo buscar si hay un DNI válido (mínimo 6 dígitos)
+    if (dniBusqueda.length >= 6) {
+      const timeoutId = setTimeout(() => {
+        buscarAlumnoPorDNI(true); // Silent = true para búsqueda automática
+      }, 500); // Esperar 500ms después de que el usuario deje de escribir
+
+      return () => clearTimeout(timeoutId);
+    } else if (dniBusqueda.length === 0) {
+      // Limpiar resultados si se borra el campo
+      limpiarBusqueda();
+    }
+  }, [dniBusqueda]);
+
+  // Auto-cargar curso cuando se selecciona un alumno
+  useEffect(() => {
+    if (usuarioPago) {
+      // Encontrar el usuario seleccionado en las opciones
+      const usuarioSeleccionado = opcionesUsuarios.find(op => op.value === parseInt(usuarioPago));
+
+      if (usuarioSeleccionado) {
+        const nombreCompleto = usuarioSeleccionado.label;
+
+        // Buscar los pagos de este alumno para obtener su curso
+        const pagosDelAlumno = pagos.filter(p => p.usuario === nombreCompleto);
+
+        if (pagosDelAlumno.length > 0) {
+          // Obtener el curso del pago más reciente
+          const pagoMasReciente = pagosDelAlumno.sort((a, b) =>
+            b.mes_afectado.localeCompare(a.mes_afectado)
+          )[0];
+
+          // Buscar el ID del curso en la lista de cursos
+          const cursoEncontrado = cursos.find(c => c.name === pagoMasReciente.carrera);
+
+          if (cursoEncontrado) {
+            setCursoPago(String(cursoEncontrado.id));
+          }
+        }
+      }
+    }
+  }, [usuarioPago, opcionesUsuarios, pagos, cursos]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -215,7 +285,7 @@ const Pagos = () => {
       .then(data => {
         // El endpoint devuelve { payments: [...], next_cursor: ... }
         if (data.payments && Array.isArray(data.payments)) {
-          const pagosFormateados = data.payments.map((p: any) => ({
+          const pagosFormateados = data.payments.map((p: PagoAPI) => ({
             id: p.id_pago,
             amount: p.monto,
             fecha_pago: p.fecha_de_pago,
@@ -226,8 +296,8 @@ const Pagos = () => {
 
           // Filtrar solo pagos del ciclo lectivo actual (2025)
           const cicloLectivoActual = "2025";
-          const pagosCicloActual = pagosFormateados.filter(p =>
-            p.mes_afectado?.startsWith(cicloLectivoActual)
+          const pagosCicloActual = pagosFormateados.filter((pago: Pago) =>
+            pago.mes_afectado?.startsWith(cicloLectivoActual)
           );
 
           setPagos(pagosCicloActual);
@@ -263,7 +333,7 @@ const Pagos = () => {
 
       if (userRes.ok) {
         const userData = await userRes.json();
-        const usuario = userData.users?.find((u: any) => u.id === parseInt(usuarioPago));
+        const usuario = userData.users?.find((u: UsuarioAPI) => u.id === parseInt(usuarioPago));
 
         if (usuario) {
           const username = `${usuario.firstname} ${usuario.lastname}`;
@@ -276,7 +346,7 @@ const Pagos = () => {
 
             if (pagosData.payments && Array.isArray(pagosData.payments)) {
               // Verificar si ya existe un pago para este alumno en este mes
-              const pagoDuplicado = pagosData.payments.find((p: any) =>
+              const pagoDuplicado = pagosData.payments.find((p: PagoAPI) =>
                 p.alumno === username && p.mes_pagado.slice(0, 7) === mesAfectado
               );
 
@@ -727,12 +797,18 @@ const Pagos = () => {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerContainerStyle}>
-        <h1 style={headerTitleStyle}> Gestión de Pagos</h1>
         <p style={headerSubtitleStyle}>Administra pagos y cuotas de manera eficiente</p>
       </div>
 
-      {/* Formulario de registro */}
-      <div style={registroCardStyle}>
+      {/* Contenedor principal con layout 70/30 */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '70% 30%',
+        gap: '20px',
+        marginBottom: '32px',
+      }}>
+        {/* Formulario de registro */}
+        <div style={registroCardStyle}>
         <h2 style={registroTitleStyle}>
            Registrar Nuevo Pago
         </h2>
@@ -780,7 +856,13 @@ const Pagos = () => {
           <select
             value={cursoPago}
             onChange={e => setCursoPago(e.target.value)}
-            style={selectStyle}
+            style={{
+              ...selectStyle,
+              backgroundColor: cursoPago && usuarioPago ? '#f3f4f6' : 'white',
+              cursor: cursoPago && usuarioPago ? 'not-allowed' : 'pointer',
+              opacity: cursoPago && usuarioPago ? 0.7 : 1,
+            }}
+            disabled={!!(cursoPago && usuarioPago)}
             onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
             onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
           >
@@ -807,96 +889,123 @@ const Pagos = () => {
             value={mesPago}
             onChange={e => setMesPago(e.target.value)}
             style={inputStyle}
+            min="2025-01"
+            max="2025-12"
+            placeholder="Seleccionar mes"
             onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
             onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
           />
         </div>
 
-        <button
-          onClick={registrarPago}
-          style={primaryButtonStyle}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
-          onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
-        >
-           Registrar Pago
-        </button>
-      </div>
-
-      {/* Formulario de búsqueda por DNI */}
-      <div style={searchCardStyle}>
-        <h2 style={searchTitleStyle}>
-          🔍 Buscar Alumno por DNI
-        </h2>
-        <div style={searchFormStyle}>
-          <input
-            type="number"
-            placeholder="Ingrese DNI del alumno"
-            value={dniBusqueda}
-            onChange={(e) => setDniBusqueda(e.target.value)}
-            style={{ ...inputStyle, flex: 1 }}
-            onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
-            onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
-          />
           <button
-            onClick={buscarAlumnoPorDNI}
-            style={{
-              ...primaryButtonStyle,
-              width: isMobile ? '100%' : 'auto',
-            }}
+            onClick={registrarPago}
+            style={primaryButtonStyle}
             onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
             onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
           >
-            🔍 Buscar
+             Registrar Pago
           </button>
-          {alumnoEncontrado && (
-            <button
-              onClick={limpiarBusqueda}
-              style={{
-                padding: isMobile ? '12px 24px' : '12px 32px',
-                borderRadius: '8px',
-                border: '1px solid #d1d5db',
-                fontSize: isMobile ? '14px' : '15px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                background: 'white',
-                color: '#6b7280',
-                fontFamily: 'inherit',
-                transition: 'all 0.2s',
-                width: isMobile ? '100%' : 'auto',
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
-            >
-              ✖ Limpiar
-            </button>
+        </div>
+
+        {/* Formulario de búsqueda por DNI */}
+        <div style={searchCardStyle}>
+          <h2 style={searchTitleStyle}>
+           Buscar Alumno
+          </h2>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          <div style={{ position: 'relative' }}>
+            <input
+              type="number"
+              placeholder="Ingrese DNI (búsqueda automática)"
+              value={dniBusqueda}
+              onChange={(e) => setDniBusqueda(e.target.value)}
+              style={{ ...inputStyle, width: '100%' }}
+              onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
+              onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+            />
+            {dniBusqueda && (
+              <button
+                onClick={limpiarBusqueda}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  padding: '4px 8px',
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#9ca3af',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  lineHeight: '1',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          {dniBusqueda && dniBusqueda.length < 6 && (
+            <p style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
+              Ingrese al menos 6 dígitos para buscar
+            </p>
           )}
         </div>
       </div>
+    </div>
 
-      {/* Modal con información del alumno */}
+      {/* Sección expandible con información del alumno */}
       {mostrarModalAlumno && alumnoEncontrado && (
-        <div style={modalOverlayStyle} onClick={cerrarModal}>
-          <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-            {/* Header del modal */}
-            <div style={modalHeaderStyle}>
+        <div style={{
+          background: '#ffffff',
+          borderRadius: '12px',
+          padding: isMobile ? '24px' : '32px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          border: '1px solid #e5e7eb',
+          marginBottom: '32px',
+          transition: 'all 0.3s ease-out',
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: '24px',
+            paddingBottom: '16px',
+            borderBottom: '1px solid #e5e7eb',
+          }}>
+            <div>
               <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
-                📊 Historial de Pagos
+                 Historial de Pagos
               </h2>
               <p style={{ fontSize: isMobile ? '14px' : '16px', color: '#6b7280' }}>
                 Detalles completos del alumno
               </p>
-              <button
-                onClick={cerrarModal}
-                style={closeButtonStyle}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
-              >
-                ✕
-              </button>
             </div>
+            <button
+              onClick={cerrarModal}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: '24px',
+                cursor: 'pointer',
+                color: '#9ca3af',
+                padding: '4px 8px',
+                lineHeight: '1',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              ✕
+            </button>
+          </div>
 
-            {/* Body del modal */}
-            <div style={modalBodyStyle}>
+          <div>
               {/* Información del alumno */}
               <div style={{ ...alumnoCardStyle, boxShadow: 'none', border: 'none', padding: 0, marginBottom: '24px' }}>
                 <div style={alumnoHeaderStyle}>
@@ -922,7 +1031,7 @@ const Pagos = () => {
                     onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
                   >
                     <span>{mostrarPagosRealizados ? '▼' : '▶'}</span>
-                    <span>📋 Pagos Realizados ({alumnoEncontrado.pagos.length})</span>
+                    <span>Pagos Realizados ({alumnoEncontrado.pagos.length})</span>
                   </a>
 
                   {mostrarPagosRealizados && (
@@ -930,10 +1039,14 @@ const Pagos = () => {
                       {alumnoEncontrado.pagos.map((pago) => (
                         <div key={pago.id} style={pagoItemStyle}>
                           <div style={mesLabelStyle}>
-                            {new Date(pago.mes_afectado + '-01').toLocaleDateString('es-AR', {
-                              month: 'long',
-                              year: 'numeric'
-                            })}
+                            {(() => {
+                              const [año, mes] = pago.mes_afectado.split('-');
+                              const fecha = new Date(parseInt(año), parseInt(mes) - 1, 15);
+                              return fecha.toLocaleDateString('es-AR', {
+                                month: 'long',
+                                year: 'numeric'
+                              });
+                            })()}
                           </div>
                           <div style={montoStyle}>
                             ${pago.amount.toLocaleString('es-AR')}
@@ -982,15 +1095,19 @@ const Pagos = () => {
                     {mostrarMesesPendientes && (
                       <div style={mesesDebeStyle}>
                         <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#991b1b', marginBottom: '4px' }}>
-                          ⚠ Meses pendientes de pago
+                           Meses pendientes de pago
                         </h4>
                         <div style={mesesDebeListStyle}>
                           {alumnoEncontrado.mesesDebe.map((mes) => (
                             <span key={mes} style={mesDebeBadgeStyle}>
-                              {new Date(mes + '-01').toLocaleDateString('es-AR', {
-                                month: 'long',
-                                year: 'numeric'
-                              })}
+                              {(() => {
+                                const [año, mesNum] = mes.split('-');
+                                const fecha = new Date(parseInt(año), parseInt(mesNum) - 1, 15);
+                                return fecha.toLocaleDateString('es-AR', {
+                                  month: 'long',
+                                  year: 'numeric'
+                                });
+                              })()}
                             </span>
                           ))}
                         </div>
@@ -999,7 +1116,6 @@ const Pagos = () => {
                   </div>
                 )}
               </div>
-            </div>
           </div>
         </div>
       )}

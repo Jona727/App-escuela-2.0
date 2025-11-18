@@ -171,12 +171,18 @@ const Inscripciones = () => {
 
   const generarMesesDelAnio = () => {
     const meses: string[] = [];
-    const añoActual = new Date().getFullYear();
-    const mesActualNumero = new Date().getMonth() + 1;
+    const cicloLectivo = 2025;
+    const fechaActual = new Date();
+    const añoActual = fechaActual.getFullYear();
+    const mesActualNumero = fechaActual.getMonth() + 1; // 1-12
 
-    for (let mes = 1; mes <= mesActualNumero; mes++) {
+    // Si estamos en el año del ciclo lectivo, generar hasta el mes actual
+    // Si ya pasó el ciclo, generar todos los 12 meses
+    const ultimoMes = añoActual === cicloLectivo ? mesActualNumero : 12;
+
+    for (let mes = 1; mes <= ultimoMes; mes++) {
       const mesStr = mes.toString().padStart(2, '0');
-      meses.push(`${añoActual}-${mesStr}`);
+      meses.push(`${cicloLectivo}-${mesStr}`);
     }
     return meses;
   };
@@ -189,37 +195,57 @@ const Inscripciones = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // Obtener todos los usuarios
-      const usersRes = await fetch("http://localhost:8000/users/all?limit=1000", {
+      // Obtener usuarios filtrados por curso usando el endpoint correcto
+      const usersRes = await fetch("http://localhost:8000/users/paginated/filtered-async", {
+        method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          limit: 100,
+          curso: curso.name,
+        }),
       });
 
       if (!usersRes.ok) {
-        throw new Error("Error al cargar usuarios");
+        const errorText = await usersRes.text();
+        console.error("Error en users/paginated/filtered-async:", errorText);
+        throw new Error(`Error al cargar usuarios: ${usersRes.status}`);
       }
 
       const usersData = await usersRes.json();
+      console.log("Users data:", usersData);
 
-      // Filtrar usuarios que pertenecen a este curso
+      // Filtrar solo alumnos (el curso ya está filtrado por el endpoint)
       const alumnosEnCurso = usersData.users?.filter(
-        (u: any) => u.curso === curso.name && u.type.toLowerCase().includes("alumno")
+        (u: any) => u.type && u.type.toLowerCase().includes("alumno")
       ) || [];
+
+      console.log(`Alumnos en curso ${curso.name}:`, alumnosEnCurso);
 
       // Obtener todos los pagos
       const pagosRes = await fetch("http://localhost:8000/payment/paginated");
+
+      if (!pagosRes.ok) {
+        const errorText = await pagosRes.text();
+        console.error("Error en payment/paginated:", errorText);
+        throw new Error(`Error al cargar pagos: ${pagosRes.status}`);
+      }
+
       const pagosData = await pagosRes.json();
+      console.log("Pagos data:", pagosData);
 
       const mesesEsperados = generarMesesDelAnio();
+      console.log("Meses esperados:", mesesEsperados);
 
       // Calcular estado de pagos para cada alumno
       const alumnosConEstado: AlumnoInscrito[] = alumnosEnCurso.map((alumno: any) => {
         const nombreCompleto = `${alumno.firstname} ${alumno.lastname}`;
 
-        // Filtrar pagos de este alumno
+        // Filtrar pagos de este alumno (solo del ciclo lectivo 2025)
         const pagosAlumno = pagosData.payments?.filter(
-          (p: any) => p.alumno === nombreCompleto
+          (p: any) => p.alumno === nombreCompleto && p.mes_pagado?.startsWith('2025')
         ) || [];
 
         const mesesPagados = pagosAlumno.map((p: any) => p.mes_pagado.slice(0, 7));
@@ -235,10 +261,11 @@ const Inscripciones = () => {
         };
       });
 
+      console.log("Alumnos con estado:", alumnosConEstado);
       setAlumnosDelCurso(alumnosConEstado);
     } catch (error) {
-      console.error("Error al cargar alumnos del curso:", error);
-      alert("Error al cargar los alumnos del curso");
+      console.error("Error detallado al cargar alumnos del curso:", error);
+      alert(`Error al cargar los alumnos del curso: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setLoadingAlumnos(false);
     }
@@ -335,13 +362,6 @@ const Inscripciones = () => {
     marginBottom: '32px',
   };
 
-  const headerTitleStyle: React.CSSProperties = {
-    fontSize: isMobile ? '28px' : '32px',
-    fontWeight: '600',
-    color: '#111827',
-    letterSpacing: '-0.02em',
-    marginBottom: '8px',
-  };
 
   const headerSubtitleStyle: React.CSSProperties = {
     fontSize: isMobile ? '14px' : '16px',
@@ -471,7 +491,7 @@ const Inscripciones = () => {
     border: '1px solid #e5e7eb',
     fontSize: '16px',
     fontWeight: '500',
-    color: '#2563eb',
+    color: '#000000ff',
     cursor: 'pointer',
     transition: 'all 0.2s',
     textDecoration: 'none',
@@ -564,7 +584,6 @@ const Inscripciones = () => {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerContainerStyle}>
-        <h1 style={headerTitleStyle}> Inscripciones</h1>
         <p style={headerSubtitleStyle}>Asigna alumnos a cursos de manera eficiente</p>
       </div>
 
@@ -576,6 +595,7 @@ const Inscripciones = () => {
 
         <div style={formGridStyle}>
           <div>
+<<<<<<< Updated upstream
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <label style={{ ...labelStyle, marginBottom: '0' }}>
                  Seleccionar Alumno
@@ -621,6 +641,11 @@ const Inscripciones = () => {
                 {isRefreshingAlumnos ? 'Actualizando...' : 'Refrescar'}
               </button>
             </div>
+=======
+            <label style={labelStyle}>
+              Seleccionar Alumno
+            </label>
+>>>>>>> Stashed changes
             <Select
               options={opcionesAlumnos}
               value={opcionesAlumnos.find(op => op.value === parseInt(selectedAlumno)) || null}
@@ -663,7 +688,7 @@ const Inscripciones = () => {
 
           <div>
             <label style={labelStyle}>
-               Seleccionar Curso
+              Seleccionar Curso
             </label>
             <select
               style={selectStyle}
@@ -710,7 +735,7 @@ const Inscripciones = () => {
       {/* Lista de cursos */}
       <div style={cursosListCardStyle}>
         <h3 style={{ ...cardTitleStyle, marginBottom: '20px' }}>
-          📚 Cursos Disponibles
+          Cursos Disponibles
         </h3>
 
         {cursos.length === 0 ? (
@@ -733,7 +758,7 @@ const Inscripciones = () => {
                   e.currentTarget.style.borderColor = '#e5e7eb';
                 }}
               >
-                🎓 {curso.name}
+                 {curso.name}
               </div>
             ))}
           </div>
@@ -747,7 +772,7 @@ const Inscripciones = () => {
             {/* Header del modal */}
             <div style={modalHeaderStyle}>
               <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
-                👥 Alumnos de {cursoSeleccionadoModal.name}
+                Alumnos de {cursoSeleccionadoModal.name}
               </h2>
               <p style={{ fontSize: isMobile ? '13px' : '14px', color: '#6b7280' }}>
                 Estado de pagos al día de hoy

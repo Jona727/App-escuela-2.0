@@ -168,11 +168,15 @@ const GestionAcademica = () => {
 
   const openMateriasModal = () => {
     fetchCarreras();
+    setShowCursosModal(false); // Cerrar otros modales
+    setShowAsignacionesModal(false);
     setShowMateriasModal(true);
   };
 
   const openCursosModal = () => {
     fetchCursos();
+    setShowMateriasModal(false); // Cerrar otros modales
+    setShowAsignacionesModal(false);
     setShowCursosModal(true);
   };
 
@@ -180,6 +184,8 @@ const GestionAcademica = () => {
     fetchCarreras();
     fetchCursos();
     fetchAsignaciones();
+    setShowMateriasModal(false); // Cerrar otros modales
+    setShowCursosModal(false);
     setShowAsignacionesModal(true);
   };
 
@@ -189,6 +195,8 @@ const GestionAcademica = () => {
     margin: '0 auto',
     padding: isMobile ? '24px' : '32px 40px',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    minHeight: '100vh',
+    background: '#f9fafb',
   };
 
   const headerStyle: React.CSSProperties = {
@@ -255,35 +263,20 @@ const GestionAcademica = () => {
     color: '#6b7280',
   };
 
-  // Estilos de modal
-  const overlayStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px',
-  };
-
-  const modalStyle: React.CSSProperties = {
+  // Estilos para secciones expansibles
+  const sectionStyle: React.CSSProperties = {
     background: '#ffffff',
     borderRadius: '12px',
     padding: isMobile ? '24px' : '32px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
     border: '1px solid #e5e7eb',
-    maxWidth: '700px',
-    width: '100%',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    position: 'relative',
+    marginTop: '24px',
+    transition: 'all 0.3s ease-out',
+    opacity: 1,
+    transform: 'translateY(0)',
   };
 
-  const modalHeaderStyle: React.CSSProperties = {
+  const sectionHeaderStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -292,7 +285,7 @@ const GestionAcademica = () => {
     borderBottom: '1px solid #e5e7eb',
   };
 
-  const modalTitleStyle: React.CSSProperties = {
+  const sectionTitleStyle: React.CSSProperties = {
     fontSize: '20px',
     fontWeight: '600',
     color: '#111827',
@@ -362,12 +355,12 @@ const GestionAcademica = () => {
   const deleteButtonStyle: React.CSSProperties = {
     padding: '6px 12px',
     borderRadius: '6px',
-    border: 'none',
+    border: '1px solid #d1d5db',
     fontSize: '12px',
     fontWeight: '500',
     cursor: 'pointer',
-    background: '#fee2e2',
-    color: '#dc2626',
+    background: 'transparent',
+    color: '#6b7280',
     fontFamily: 'inherit',
     transition: 'all 0.2s',
   };
@@ -415,8 +408,8 @@ const GestionAcademica = () => {
     borderRadius: '12px',
     fontSize: '13px',
     fontWeight: '500',
-    background: '#dcfce7',
-    color: '#166534',
+    background: 'transparent',
+    color: '#111827',
     flex: 1,
   };
 
@@ -424,7 +417,6 @@ const GestionAcademica = () => {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Gestión Académica</h1>
         <p style={subtitleStyle}>
           Administra materias, cursos y sus asignaciones
         </p>
@@ -499,12 +491,13 @@ const GestionAcademica = () => {
         </div>
       </div>
 
-      {/* Modal Materias */}
-      {showMateriasModal && (
-        <div style={overlayStyle} onClick={() => setShowMateriasModal(false)}>
-          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-            <div style={modalHeaderStyle}>
-              <h2 style={modalTitleStyle}>Gestión de Materias</h2>
+      {/* Contenedor para secciones dinámicas - ocupa el mismo espacio */}
+      <div style={{ minHeight: showMateriasModal || showCursosModal || showAsignacionesModal ? 'auto' : '0' }}>
+        {/* Sección Materias */}
+        {showMateriasModal && (
+          <div style={sectionStyle}>
+            <div style={sectionHeaderStyle}>
+              <h2 style={sectionTitleStyle}>Gestión de Materias</h2>
               <button
                 onClick={() => setShowMateriasModal(false)}
                 style={closeButtonStyle}
@@ -548,8 +541,16 @@ const GestionAcademica = () => {
                     <button
                       style={deleteButtonStyle}
                       onClick={() => eliminarCarrera(carrera.id, carrera.name)}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#fee2e2';
+                        e.currentTarget.style.color = '#dc2626';
+                        e.currentTarget.style.borderColor = '#fecaca';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = '#6b7280';
+                        e.currentTarget.style.borderColor = '#d1d5db';
+                      }}
                     >
                       Eliminar
                     </button>
@@ -558,15 +559,13 @@ const GestionAcademica = () => {
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Modal Cursos */}
-      {showCursosModal && (
-        <div style={overlayStyle} onClick={() => setShowCursosModal(false)}>
-          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-            <div style={modalHeaderStyle}>
-              <h2 style={modalTitleStyle}>Gestión de Cursos</h2>
+        {/* Sección Cursos */}
+        {showCursosModal && (
+          <div style={sectionStyle}>
+            <div style={sectionHeaderStyle}>
+              <h2 style={sectionTitleStyle}>Gestión de Cursos</h2>
               <button
                 onClick={() => setShowCursosModal(false)}
                 style={closeButtonStyle}
@@ -610,8 +609,16 @@ const GestionAcademica = () => {
                     <button
                       style={deleteButtonStyle}
                       onClick={() => eliminarCurso(curso.id, curso.name)}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#fee2e2';
+                        e.currentTarget.style.color = '#dc2626';
+                        e.currentTarget.style.borderColor = '#fecaca';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = '#6b7280';
+                        e.currentTarget.style.borderColor = '#d1d5db';
+                      }}
                     >
                       Eliminar
                     </button>
@@ -620,15 +627,13 @@ const GestionAcademica = () => {
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Modal Asignaciones */}
-      {showAsignacionesModal && (
-        <div style={overlayStyle} onClick={() => setShowAsignacionesModal(false)}>
-          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-            <div style={modalHeaderStyle}>
-              <h2 style={modalTitleStyle}>Asignar Materias a Cursos</h2>
+        {/* Sección Asignaciones */}
+        {showAsignacionesModal && (
+          <div style={sectionStyle}>
+            <div style={sectionHeaderStyle}>
+              <h2 style={sectionTitleStyle}>Asignar Materias a Cursos</h2>
               <button
                 onClick={() => setShowAsignacionesModal(false)}
                 style={closeButtonStyle}
@@ -669,7 +674,7 @@ const GestionAcademica = () => {
               <button
                 style={buttonStyle}
                 onClick={asignarCarreraACurso}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#ffffffff'}
                 onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
               >
                 Asignar
@@ -702,8 +707,16 @@ const GestionAcademica = () => {
                             <button
                               style={{...deleteButtonStyle, marginLeft: '12px'}}
                               onClick={() => eliminarAsignacion(materia.asignacionId)}
-                              onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                              onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#fee2e2';
+                                e.currentTarget.style.color = '#dc2626';
+                                e.currentTarget.style.borderColor = '#fecaca';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.color = '#6b7280';
+                                e.currentTarget.style.borderColor = '#d1d5db';
+                              }}
                             >
                               Eliminar
                             </button>
@@ -716,8 +729,8 @@ const GestionAcademica = () => {
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

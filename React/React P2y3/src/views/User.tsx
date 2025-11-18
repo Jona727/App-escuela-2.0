@@ -36,7 +36,7 @@ function User() {
   const tableBodyRef = useRef<HTMLDivElement>(null);
 
   // Estados para búsqueda
-  const [searchType, setSearchType] = useState<"dni" | "curso">("dni");
+  const [searchType, setSearchType] = useState<"dni" | "curso" | "nombre">("dni");
   const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => {
@@ -44,6 +44,17 @@ function User() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Búsqueda automática por nombre
+  useEffect(() => {
+    if (searchType === "nombre" && showUsersModal) {
+      const timeoutId = setTimeout(() => {
+        fetchUsuarios(undefined, true);
+      }, 300); // Debounce de 300ms
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchValue, searchType, showUsersModal]);
 
   const fetchUsuarios = async (lastSeenId?: number, resetList = false) => {
     if (isLoadingUsers) return;
@@ -63,6 +74,8 @@ function User() {
           body.dni = parseInt(searchValue) || 0;
         } else if (searchType === "curso") {
           body.curso = searchValue;
+        } else if (searchType === "nombre") {
+          body.nombre = searchValue;
         }
 
         res = await fetch("http://localhost:8000/users/paginated/filtered-async", {
@@ -225,11 +238,13 @@ function User() {
 
   const openCreateModal = () => {
     limpiar();
+    setShowUsersModal(false); // Cerrar la otra sección
     setShowCreateModal(true);
   };
 
   const openUsersModal = () => {
     fetchUsuarios(undefined, true);
+    setShowCreateModal(false); // Cerrar la otra sección
     setShowUsersModal(true);
   };
 
@@ -239,6 +254,8 @@ function User() {
     margin: '0 auto',
     padding: isMobile ? '24px' : '32px 40px',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    minHeight: '100vh',
+    background: '#f9fafb',
   };
 
   const headerStyle: React.CSSProperties = {
@@ -303,35 +320,20 @@ function User() {
     color: '#6b7280',
   };
 
-  // Estilos de modal
-  const overlayStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px',
-  };
-
-  const modalStyle: React.CSSProperties = {
+  // Estilos para secciones expansibles
+  const sectionStyle: React.CSSProperties = {
     background: '#ffffff',
     borderRadius: '12px',
     padding: isMobile ? '24px' : '32px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
     border: '1px solid #e5e7eb',
-    maxWidth: '800px',
-    width: '100%',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    position: 'relative',
+    marginTop: '24px',
+    transition: 'all 0.3s ease-out',
+    opacity: 1,
+    transform: 'translateY(0)',
   };
 
-  const modalHeaderStyle: React.CSSProperties = {
+  const sectionHeaderStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -340,7 +342,7 @@ function User() {
     borderBottom: '1px solid #e5e7eb',
   };
 
-  const modalTitleStyle: React.CSSProperties = {
+  const sectionTitleStyle: React.CSSProperties = {
     fontSize: '20px',
     fontWeight: '600',
     color: '#111827',
@@ -462,7 +464,6 @@ function User() {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Gestión de Usuarios</h1>
         <p style={subtitleStyle}>
           Administra los usuarios del sistema
         </p>
@@ -509,18 +510,19 @@ function User() {
             <UsersIcon size={28} style={{ color: '#3b82f6' }} />
           </div>
           <div>
-            <h3 style={accessTitleStyle}>Usuarios Registrados</h3>
-            <p style={accessDescStyle}>Ver, editar y eliminar usuarios</p>
+            <h3 style={accessTitleStyle}>Ver Alumnos</h3>
+            <p style={accessDescStyle}>Ver, editar y eliminar alumnos</p>
           </div>
         </div>
       </div>
 
-      {/* Modal Crear/Editar Usuario */}
-      {showCreateModal && (
-        <div style={overlayStyle} onClick={() => { setShowCreateModal(false); limpiar(); }}>
-          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-            <div style={modalHeaderStyle}>
-              <h2 style={modalTitleStyle}>
+      {/* Contenedor para secciones dinámicas - ocupa el mismo espacio */}
+      <div style={{ minHeight: showCreateModal || showUsersModal ? 'auto' : '0' }}>
+        {/* Sección Crear/Editar Usuario */}
+        {showCreateModal && (
+          <div style={sectionStyle}>
+            <div style={sectionHeaderStyle}>
+              <h2 style={sectionTitleStyle}>
                 {modoEdicion ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
               </h2>
               <button
@@ -656,27 +658,25 @@ function User() {
                 </div>
               )}
             </form>
-          </div>
         </div>
       )}
 
-      {/* Modal Usuarios Registrados */}
+      {/* Sección Usuarios Registrados */}
       {showUsersModal && (
-        <div style={overlayStyle} onClick={() => setShowUsersModal(false)}>
-          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-            <div style={modalHeaderStyle}>
-              <h2 style={modalTitleStyle}>
-                Usuarios Registrados ({usuarios.length})
-              </h2>
-              <button
-                onClick={() => setShowUsersModal(false)}
-                style={closeButtonStyle}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                <X size={20} />
-              </button>
-            </div>
+        <div style={sectionStyle}>
+          <div style={sectionHeaderStyle}>
+            <h2 style={sectionTitleStyle}>
+              Alumnos Registrados ({usuarios.filter(u => u.type === "Alumno").length})
+            </h2>
+            <button
+              onClick={() => setShowUsersModal(false)}
+              style={closeButtonStyle}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <X size={20} />
+            </button>
+          </div>
 
             {/* Barra de búsqueda */}
             <div style={{
@@ -693,14 +693,15 @@ function User() {
                 flexWrap: isMobile ? 'wrap' : 'nowrap'
               }}>
                 <div style={{ flex: isMobile ? '1 1 100%' : '0 0 150px' }}>
-                  <label style={labelStyle}>Buscar por</label>
+                  <label style={labelStyle}>Buscar</label>
                   <select
                     style={{...inputStyle, cursor: 'pointer'}}
                     value={searchType}
-                    onChange={(e) => setSearchType(e.target.value as "dni" | "curso")}
+                    onChange={(e) => setSearchType(e.target.value as "dni" | "curso" | "nombre")}
                     onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
                     onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
                   >
+                    <option value="nombre">Nombre</option>
                     <option value="dni">DNI</option>
                     <option value="curso">Curso</option>
                   </select>
@@ -708,18 +709,18 @@ function User() {
 
                 <div style={{ flex: isMobile ? '1 1 100%' : '1' }}>
                   <label style={labelStyle}>
-                    {searchType === "dni" ? "Número de DNI" : "Nombre del curso"}
+                    {searchType === "dni" ? "" : searchType === "curso" ? "" : ""}
                   </label>
                   <input
                     type={searchType === "dni" ? "number" : "text"}
                     style={inputStyle}
-                    placeholder={searchType === "dni" ? "Ej: 12345678" : "Ej: 1er Año"}
+                    placeholder={searchType === "dni" ? "" : searchType === "curso" ? "" : ""}
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
                     onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
                     onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
                     onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === 'Enter' && searchType !== "nombre") {
                         fetchUsuarios(undefined, true);
                       }
                     }}
@@ -782,12 +783,11 @@ function User() {
                       <th style={thStyle}>DNI</th>
                       <th style={thStyle}>Nombre</th>
                       <th style={thStyle}>Curso</th>
-                      <th style={thStyle}>Tipo</th>
                       <th style={thStyle}>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {usuarios.map((u) => (
+                    {usuarios.filter(u => u.type === "Alumno").map((u) => (
                       <tr key={u.id}>
                         <td style={tdStyle}>{u.username}</td>
                         <td style={tdStyle}>{u.dni}</td>
@@ -810,22 +810,31 @@ function User() {
                           )}
                         </td>
                         <td style={tdStyle}>
-                          <span style={badgeStyle(u.type)}>{u.type}</span>
-                        </td>
-                        <td style={tdStyle}>
                           <button
                             onClick={() => handleEditar(u)}
-                            style={{...actionButtonStyle, background: '#dbeafe', color: '#2563eb'}}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#bfdbfe'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = '#dbeafe'}
+                            style={{...actionButtonStyle, background: 'transparent', color: '#6b7280'}}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#dbeafe';
+                              e.currentTarget.style.color = '#2563eb';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'transparent';
+                              e.currentTarget.style.color = '#6b7280';
+                            }}
                           >
                             Editar
                           </button>
                           <button
                             onClick={() => handleEliminar(u.id)}
-                            style={{...actionButtonStyle, background: '#fee2e2', color: '#dc2626', marginRight: 0}}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}
+                            style={{...actionButtonStyle, background: 'transparent', color: '#6b7280', marginRight: 0}}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#fee2e2';
+                              e.currentTarget.style.color = '#dc2626';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'transparent';
+                              e.currentTarget.style.color = '#6b7280';
+                            }}
                           >
                             Eliminar
                           </button>
@@ -849,14 +858,14 @@ function User() {
               )}
             </div>
 
-            {msg && (
-              <div style={{...alertStyle(msg.toLowerCase().includes("error")), marginTop: '16px'}}>
-                {msg}
-              </div>
-            )}
-          </div>
+          {msg && (
+            <div style={{...alertStyle(msg.toLowerCase().includes("error")), marginTop: '16px'}}>
+              {msg}
+            </div>
+          )}
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
